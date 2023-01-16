@@ -10,12 +10,6 @@ load_dotenv(find_dotenv())
 
 TOKEN = os.environ.get("TOKEN")
 
-reddit = asyncpraw.Reddit(
-    client_id = os.environ.get("CLIENT_ID")
-    client_secret = os.environ.get("CLIENT_SECRET")
-    user_agent = os.environ.get("USER_AGENT")
-)
-
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -36,8 +30,13 @@ def run_discord_bot():
     @bot.tree.command(name="set_subreddit")
     @app_commands.describe(subreddit = "Type the name of the subreddit you wish to stream content from.")
     async def set_subreddit(interaction: discord.Interaction, subreddit: str):
+
+        # Get channel command was run in
         ctx = await bot.get_context(interaction)
+
         csv_helper.set_subreddit(ctx.channel, subreddit)
+
+        # Send confirmation message
         await interaction.response.send_message(f"Set subreddit to r/{subreddit}")
 
 
