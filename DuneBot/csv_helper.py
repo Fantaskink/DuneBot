@@ -1,28 +1,51 @@
 import csv
 
+import os
+
+if os.path.exists("subreddits.csv"):
+    pass
+else:
+    with open('subreddits.csv', 'w') as creating_new_csv_file: 
+        pass
+
 def set_subreddit(channel, subreddit):
+
+    
+
+    channel = str(channel)
+    subreddit = str(subreddit)
+
     print(channel, subreddit)
 
-    # Open the csv file for reading and writing
-    with open("subreddits.csv", "r+") as csv_file:
-        # Read all the rows into a list
-        rows = csv_file.readlines()
+    found = False
+    with open('subreddits.csv', 'r') as f:
+        reader = csv.reader(f)
+        lines = [line for line in reader]
+        for i, row in enumerate(lines):
+            if channel in row or subreddit in row:
+                lines[i] = [channel, subreddit]
+                found = True
+                break
+    if not found:
+        lines.append([channel, subreddit])
 
-        # Iterate through each row
-        for i, row in enumerate(rows):
-            # Split the row into a list
-            row_data = row.strip().split(",")
+    with open('subreddits.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(lines)
 
-            # Check if the row contains either of the strings
-            if channel in row_data or subreddit in row_data:
-                # Overwrite the row with new data
-                rows[i] = channel + "," + subreddit + "\n"
+
+def get_channels_and_subs():
+    # open the CSV file
+    with open('subreddits.csv', 'r') as file:
+        # read the contents of the file using the csv.reader object
+        csv_reader = csv.reader(file)
         
-        # Clear the file
-        csv_file.seek(0)
-        csv_file.truncate()
+        # create an empty list to store the rows
+        data = []
         
-        # Write the rows back to the file
-        csv_file.writelines(rows)
+        # iterate over the rows in the file
+        for row in csv_reader:
+            # append each row as a separate list to the data list
+            data.append(row)
 
-
+    return(data)

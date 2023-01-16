@@ -34,10 +34,11 @@ def run_discord_bot():
         # Get channel command was run in
         ctx = await bot.get_context(interaction)
 
+        # Store channel and specified subreddit in csv file
         csv_helper.set_subreddit(ctx.channel, subreddit)
 
         # Send confirmation message
-        await interaction.response.send_message(f"Set subreddit to r/{subreddit}")
+        await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
 
 
     # Remember to run your bot with your personal TOKEN

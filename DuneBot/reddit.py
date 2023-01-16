@@ -1,6 +1,11 @@
 import asyncpraw
+import csv_helper
+import asyncio
 
 import os
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 reddit = asyncpraw.Reddit(
     client_id = os.environ.get("CLIENT_ID"),
@@ -9,8 +14,7 @@ reddit = asyncpraw.Reddit(
 )
 
 
-async def stream_subreddits():
+#async def stream_subreddits(channel, subreddit):
 
-    subreddit = await reddit.subreddit("dune")
-    async for submission in subreddit.stream.submissions(skip_existing=False):
-        print(submission)
+    
+
