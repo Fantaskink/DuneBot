@@ -1,6 +1,11 @@
 import discord
 import responses
+import os
+from dotenv import load_dotenv, find_dotenv
 
+load_dotenv(find_dotenv())
+
+DISCORD_TOKEN = os.environ.get("TOKEN")
 
 # Send messages
 async def send_message(message, user_message, is_private):
@@ -15,7 +20,7 @@ async def send_message(message, user_message, is_private):
 def run_discord_bot():
     intents = discord.Intents.default()
     intents.message_content = True
-    TOKEN = 'MTA2NDQ3ODk4MzA5NTMzMjg2NA.GN-KPn.Y3BGkR9SudbeNp1GC7ZqO8o_7PmFczu1nmoUgA'
+    TOKEN = DISCORD_TOKEN
     client = discord.Client(intents=intents)
 
     @client.event
