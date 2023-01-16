@@ -1,52 +1,46 @@
 import discord
-import responses
+from discord import app_commands
+from discord.ext import commands
+import reddit
+import csv_helper
 import os
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
-DISCORD_TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get("TOKEN")
 
-# Send messages
-async def send_message(message, user_message, is_private):
-    try:
-        response = responses.handle_response(user_message)
-        await message.author.send(response) if is_private else await message.channel.send(response)
+reddit = asyncpraw.Reddit(
+    client_id = os.environ.get("CLIENT_ID")
+    client_secret = os.environ.get("CLIENT_SECRET")
+    user_agent = os.environ.get("USER_AGENT")
+)
 
-    except Exception as e:
-        print(e)
-
+intents = discord.Intents.default()
+intents.message_content = True
 
 def run_discord_bot():
-    intents = discord.Intents.default()
-    intents.message_content = True
-    TOKEN = DISCORD_TOKEN
-    client = discord.Client(intents=intents)
 
-    @client.event
+    bot = commands.Bot(command_prefix='!', intents = intents)
+
+    @bot.event
     async def on_ready():
-        print(f'{client.user} is now running!')
+        print(f'{bot.user} is now running.')
+        try:
+            synced = await bot.tree.sync()
+            print(f"Synced {len(synced)} commands")
+        except Exception as e:
+            print(e)
 
-    @client.event
-    async def on_message(message):
-        # Make sure bot doesn't get stuck in an infinite loop
-        if message.author == client.user:
-            return
+    # Set up subreddit streaming in specific channel
+    @bot.tree.command(name="set_subreddit")
+    @app_commands.describe(subreddit = "Type the name of the subreddit you wish to stream content from.")
+    async def set_subreddit(interaction: discord.Interaction, subreddit: str):
+        ctx = await bot.get_context(interaction)
+        csv_helper.set_subreddit(ctx.channel, subreddit)
+        await interaction.response.send_message(f"Set subreddit to r/{subreddit}")
 
-        # Get data about the user
-        username = str(message.author)
-        user_message = str(message.content)
-        channel = str(message.channel)
-
-        # Debug printing
-        print(f"{username} said: '{user_message}' ({channel})")
-
-        # If the user message contains a '?' in front of the text, it becomes a private message
-        if user_message[0] == '?':
-            user_message = user_message[1:]  # [1:] Removes the '?'
-            await send_message(message, user_message, is_private=True)
-        else:
-            await send_message(message, user_message, is_private=False)
 
     # Remember to run your bot with your personal TOKEN
-    client.run(TOKEN)
+    bot.run(TOKEN)
+    
