@@ -2,11 +2,12 @@ import asyncpraw
 import os
 import discord
 from discord.ext import commands
+from csv_helper import get_rows
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
-async def stream_subreddit(channel, sub):
+async def stream_subreddit(channel_id, channel, sub):
     async with asyncpraw.Reddit(
     client_id = os.environ.get("CLIENT_ID"),
     client_secret = os.environ.get("CLIENT_SECRET"),
@@ -14,9 +15,23 @@ async def stream_subreddit(channel, sub):
 ) as reddit:
     
         subreddit = await reddit.subreddit(str(sub))
-        print("Subreddit:", subreddit)
-        async for submission in subreddit.stream.submissions(skip_existing=True):
-            await send_submission(channel, submission)
+        async for submission in subreddit.stream.submissions(skip_existing=False):
+            rows = get_rows()
+
+            channel_and_sub_valid = False
+
+            for row in rows:
+                #print(channel_id, row[0])
+                if channel_id == row[0] and sub == row[1]:
+                    channel_and_sub_valid = True
+            
+            if channel_and_sub_valid == True:
+                await send_submission(channel, submission)
+            else:
+                print("Channel and sub no longer valid")
+                break
+    print("Function halted")
+                    
 
 async def send_submission(channel, submission):
 

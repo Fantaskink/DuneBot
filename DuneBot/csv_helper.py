@@ -9,22 +9,19 @@ else:
         pass
 
 def set_subreddit(channel, subreddit):
-
     channel = str(channel)
     subreddit = str(subreddit)
-
     found = False
+    lines = []
     with open('subreddits.csv', 'r') as f:
         reader = csv.reader(f)
-        lines = [line for line in reader]
-        for i, row in enumerate(lines):
-            if channel in row or subreddit in row:
-                lines[i] = [channel, subreddit,"False"]
+        for row in reader:
+            if channel in row:
                 found = True
-                break
+                row = [channel, subreddit,"False"]
+            lines.append(row)
     if not found:
         lines.append([channel, subreddit,"False"])
-
     with open('subreddits.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(lines)
@@ -46,29 +43,27 @@ def get_rows():
 
     return(data)
 
-def set_true(row_index):
-    with open('subreddits.csv', 'r') as f:
-        reader = csv.reader(f)
-        lines = [line for line in reader]
-
-        # Sets boolean value from csv file to true
-        lines[row_index][2] = "True"
-    
-    with open('subreddits.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(lines)
-
-def set_false(row_index):
-    with open('subreddits.csv', 'r') as f:
-        reader = csv.reader(f)
-        lines = [line for line in reader]
-
-        # Sets boolean value from csv file to true
-        lines[row_index][2] = "False"
-    
-    with open('subreddits.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(lines)
+def update_csv_row(id_to_find, new_value):
+    # Open the CSV file
+    with open('subreddits.csv', 'r') as csvfile:
+        # Create a CSV reader
+        reader = csv.reader(csvfile)
+        # Create a new list to store the updated rows
+        rows = []
+        # Iterate through the rows in the CSV
+        for row in reader:
+            # Check if the first column matches the ID we're looking for
+            if row[0] == id_to_find:
+                # Update the third column with the new value
+                row[2] = new_value
+            # Add the row to the list of updated rows
+            rows.append(row)
+    # Open the CSV file again, this time in write mode
+    with open('subreddits.csv', 'w', newline='') as csvfile:
+        # Create a CSV writer
+        writer = csv.writer(csvfile)
+        # Write the updated rows to the file
+        writer.writerows(rows)
                 
 
 def set_all_false():
