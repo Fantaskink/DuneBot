@@ -1,6 +1,7 @@
 import csv
 import os
 
+# Create "subreddits.csv" if it does not exist
 if os.path.exists("subreddits.csv"):
     pass
 else:
