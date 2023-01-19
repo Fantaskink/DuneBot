@@ -15,7 +15,7 @@ async def stream_subreddit(channel, sub):
     
         subreddit = await reddit.subreddit(str(sub))
         print("Subreddit:", subreddit)
-        async for submission in subreddit.stream.submissions(skip_existing=False):
+        async for submission in subreddit.stream.submissions(skip_existing=True):
             await send_submission(channel, submission)
 
 async def send_submission(channel, submission):
@@ -72,5 +72,11 @@ async def send_submission(channel, submission):
 
     discord_embed.add_field(name=post_name_shortened, value=post_text, inline=False)
 
+
+    #bot.user.edit(username=submission.subreddit.name)
+
     await channel.send(embed=discord_embed)
+
+    
+    #bot.user.edit(username="Dune")
     #print("Sent submission in channel:", channel)

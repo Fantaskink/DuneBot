@@ -57,6 +57,18 @@ def set_true(row_index):
     with open('subreddits.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(lines)
+
+def set_false(row_index):
+    with open('subreddits.csv', 'r') as f:
+        reader = csv.reader(f)
+        lines = [line for line in reader]
+
+        # Sets boolean value from csv file to true
+        lines[row_index][2] = "False"
+    
+    with open('subreddits.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(lines)
                 
 
 def set_all_false():
@@ -90,19 +102,4 @@ def delete_row( row_index):
         writer = csv.writer(file)
         # Write the updated data to the CSV file
         writer.writerows(data)
-
-def get_rows_with_false():
-    # Open the CSV file for reading
-    with open('subreddits.csv', 'r') as file:
-        # Create a CSV reader object
-        reader = csv.reader(file)
-        # Initialize an empty list to store the rows with "False" in the third column
-        false_rows = []
-        # Iterate through each row in the CSV file
-        for row in reader:
-            # Check if the third column in the row is "False"
-            if row[2] == "False":
-                # If it is, add the row to the list
-                false_rows.append(row)
-        return false_rows
 

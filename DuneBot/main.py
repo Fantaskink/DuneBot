@@ -28,6 +28,8 @@ async def on_ready():
     except Exception as e:
         print(e)
 
+    
+
     myLoop.start()
 
 # Set up subreddit streaming in specific channel
@@ -44,24 +46,25 @@ async def set_subreddit_stream_channel(interaction: discord.Interaction, subredd
     # Send confirmation message
     await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
 
-
 @tasks.loop(seconds = 10) # repeat after every 10 seconds
 async def myLoop():
     print("Loop")
-    await start_streams()
+    task = asyncio.create_task(start_streams())
+    shield_task = asyncio.shield(task)
 
     
 async def start_streams():
-    rows = csv_helper.get_rows_with_false()
+    rows = csv_helper.get_rows()
 
     for row in rows:
-        channel_id = row[0]
-        channel = bot.get_channel(int(channel_id))
-        subreddit = row[1]
-        await reddit.stream_subreddit(channel, subreddit)
-        print("next loop")
-        csv_helper.set_true(rows.index(row))
-
+        if row[2] == "False":
+            channel_id = row[0]
+            channel = bot.get_channel(int(channel_id))
+            subreddit = row[1]
+            csv_helper.set_true(rows.index(row))
+            print("Row",rows.index(row), rows[rows.index(row)])
+            await reddit.stream_subreddit(channel, subreddit)
+            csv_helper.set_false(rows.index(row))
 
 
 # Delete entire row in csv file if the channel does not exist
