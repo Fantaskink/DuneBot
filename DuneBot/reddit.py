@@ -64,12 +64,15 @@ async def send_submission(channel, submission):
 
     posttype = "New post"
 
+    is_media = False
+
     if submission.is_self:
         posttype = "New self post"
         color_hex = discord.Colour.blue()
     else:
         posttype = "New link post"
         color_hex = discord.Colour.green()
+        is_media = True
 
     discord_embed=discord.Embed(title=str(posttype),
     url=str(link),
@@ -84,7 +87,14 @@ async def send_submission(channel, submission):
 
     # Shorten post title and add dots
     post_name_shortened = (post_name[:200] + '...') if len(post_name) > 75 else post_name
-    discord_embed.add_field(name=post_name_shortened, value=post_text, inline=False)
+    
+
+
+    if is_media:
+        discord_embed.set_image(url=submission.url)
+        discord_embed.add_field(name=post_name_shortened, value=post_text + "\n" + submission.url, inline=False)
+    else:
+        discord_embed.add_field(name=post_name_shortened, value=post_text, inline=False)
 
 
     #bot.user.edit(username=submission.subreddit.name)
