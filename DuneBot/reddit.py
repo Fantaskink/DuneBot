@@ -46,6 +46,7 @@ async def send_submission(channel, submission):
 
     await user.load()
 
+    # Attempt to load user icon. Load default icon if unsuccessful
     try:
         icon = user.icon_img
     except:
@@ -55,9 +56,8 @@ async def send_submission(channel, submission):
     post_text = (data[:200] + '...') if len(data) > 75 else data
 
     # Add spoiler tags to selftext if spoiler
-    if submission.spoiler:
+    if submission.spoiler and not post_text == "":
         post_text = "||"+ post_text + "||"
-
 
     user_link = str("https://www.reddit.com/u/" + submission.author.name)
     link = "https://www.reddit.com" + submission.permalink
@@ -82,9 +82,8 @@ async def send_submission(channel, submission):
 
     post_name = submission.title
 
-    # Shorten and add dots
+    # Shorten post title and add dots
     post_name_shortened = (post_name[:200] + '...') if len(post_name) > 75 else post_name
-
     discord_embed.add_field(name=post_name_shortened, value=post_text, inline=False)
 
 
@@ -92,6 +91,5 @@ async def send_submission(channel, submission):
 
     await channel.send(embed=discord_embed)
 
-    
     #bot.user.edit(username="Dune")
     #print("Sent submission in channel:", channel)
