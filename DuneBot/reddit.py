@@ -15,7 +15,7 @@ async def stream_subreddit(channel_id, channel, sub):
 ) as reddit:
     
         subreddit = await reddit.subreddit(str(sub))
-        async for submission in subreddit.stream.submissions(skip_existing=False):
+        async for submission in subreddit.stream.submissions(skip_existing=True):
             rows = get_rows()
 
             channel_and_sub_valid = False
@@ -42,8 +42,8 @@ async def send_submission(channel, submission):
         print("Failed to load post")
 
 
+    # Get post author
     user = submission.author
-
     await user.load()
 
     # Attempt to load user icon. Load default icon if unsuccessful
@@ -59,6 +59,7 @@ async def send_submission(channel, submission):
     if submission.spoiler and not post_text == "":
         post_text = "||"+ post_text + "||"
 
+    # Get links to author and post
     user_link = str("https://www.reddit.com/u/" + submission.author.name)
     link = "https://www.reddit.com" + submission.permalink
 

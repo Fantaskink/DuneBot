@@ -35,14 +35,17 @@ async def on_ready():
 @app_commands.describe(subreddit = "Type the name of the subreddit you wish to stream content from.")
 async def set_subreddit_stream_channel(interaction: discord.Interaction, subreddit: str):
 
-    # Get channel command was run in
-    ctx = await bot.get_context(interaction)
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+    else:
+        # Get channel command was run in
+        ctx = await bot.get_context(interaction)
 
-    # Store channel and specified subreddit in csv file
-    csv_helper.set_subreddit(ctx.channel.id, subreddit)
+        # Store channel and specified subreddit in csv file
+        csv_helper.set_subreddit(ctx.channel.id, subreddit)
 
-    # Send confirmation message
-    await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
+        # Send confirmation message
+        await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
 
 @tasks.loop(seconds = 10) # repeat after every 10 seconds
 async def myLoop():
