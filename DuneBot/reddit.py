@@ -102,3 +102,17 @@ async def send_submission(channel, submission):
 
     #bot.user.edit(username="Dune")
     #print("Sent submission in channel:", channel)
+
+async def check_subreddit_exists(subreddit_name):
+    async with asyncpraw.Reddit(
+    client_id = os.environ.get("CLIENT_ID"),
+    client_secret = os.environ.get("CLIENT_SECRET"),
+    user_agent = os.environ.get("USER_AGENT")
+) as reddit:
+        
+        try:
+            subreddit = await reddit.subreddit(subreddit_name, fetch=True)
+        except Exception:
+            return False
+        else:
+            return True

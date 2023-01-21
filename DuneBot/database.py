@@ -20,6 +20,13 @@ def delete_subreddit(id:str):
     result = collection.delete_one({"_id": id})
     print(result.deleted_count, "document(s) deleted.")
 
+def delete_subreddit_by_channel_id(channel_id):
+    db = client["DuneBot"]
+    collection = db["subreddits"]
+
+    result = collection.delete_one({"channel_id": channel_id})
+    print(result.deleted_count, "document(s) deleted.")
+
 def add_subreddit(channel_id, subreddit):
     db = client["DuneBot"]
     collection = db["subreddits"]

@@ -42,11 +42,26 @@ async def set_subreddit_stream_channel(interaction: discord.Interaction, subredd
         # Get channel command was run in
         ctx = await bot.get_context(interaction)
 
-        # Store channel and specified subreddit in database
-        database.add_subreddit(ctx.channel.id, subreddit)
+        # Store channel and specified subreddit in database if subreddit exists
+        if await reddit.check_subreddit_exists(subreddit) == True:
+            database.add_subreddit(ctx.channel.id, subreddit)
+            # Send confirmation message
+            await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
+        else:
+            await interaction.response.send_message(f"r/{subreddit} does not exist")
 
-        # Send confirmation message
-        await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
+@bot.tree.command(name="stop_stream")
+@app_commands.describe()
+async def stop_subreddit_stream_channel(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+    else:
+        # Get channel command was run in
+        ctx = await bot.get_context(interaction)
+        channel_id = ctx.channel.id
+
+        database.delete_subreddit_by_channel_id(channel_id)
+        await interaction.response.send_message("Subreddit stream stopped")
 
 @tasks.loop(seconds = 10) # repeat after every 10 seconds
 async def myLoop():
