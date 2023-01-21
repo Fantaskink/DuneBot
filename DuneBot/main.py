@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext import tasks
+import timezone_manager
 import reddit
 import database
 import os
@@ -88,6 +89,7 @@ async def myLoop():
     verify_channels()
     task = asyncio.create_task(start_streams())
     shield_task = asyncio.shield(task)
+    print(timezone_manager.get_current_time())
 
     
 async def start_streams():
