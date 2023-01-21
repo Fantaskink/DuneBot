@@ -2,6 +2,7 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv, find_dotenv
 from models.subreddit_stream import Subreddit_stream
+from models.book_club_member import Book_club_member
 
 load_dotenv(find_dotenv())
 
@@ -77,3 +78,29 @@ def set_activity_status(id:str, is_active):
     query = {"_id": id}
     new_values = {"$set": {"is_active": is_active}}
     collection.update_one(query, new_values)
+
+def add_book_club_member(discord_id, timeslot):
+    db = client["DuneBot"]
+    collection = db["bookclubmembers"]
+
+    book_club_member = Book_club_member(discord_id=discord_id, timeslot=timeslot).to_mongo().to_dict()
+
+    # Replace existing document if new one has the same channel, otherwise insert new document
+    res = collection.replace_one({"discord_id": discord_id}, book_club_member, upsert=True)
+
+    print(res.acknowledged)
+    print(res.upserted_id)
+
+def delete_member_by_discord_id(discord_id):
+    db = client["DuneBot"]
+    collection = db["bookclubmembers"]
+
+    result = collection.delete_one({"discord_id": discord_id})
+    print(result.deleted_count, "document(s) deleted.")
+
+def delete_member(id:str):
+    db = client["DuneBot"]
+    collection = db["bookclubmembers"]
+
+    result = collection.delete_one({"_id": id})
+    print(result.deleted_count, "document(s) deleted.")

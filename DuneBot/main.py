@@ -63,6 +63,25 @@ async def stop_subreddit_stream_channel(interaction: discord.Interaction):
         database.delete_subreddit_by_channel_id(channel_id)
         await interaction.response.send_message("Subreddit stream stopped")
 
+@bot.tree.command(name="book_club_join")
+@app_commands.choices(choices=[
+    app_commands.Choice(name="11 PM CET", value="11 PM CET"),
+    app_commands.Choice(name="11 PM CT", value="11 PM CT"),
+    app_commands.Choice(name="11 PM PT", value="11 PM PT"),
+    ])
+async def book_club_join(interaction: discord.Interaction, choices: app_commands.Choice[str]):
+    user_id = interaction.user.id
+    database.add_book_club_member(user_id, choices.value)
+    await interaction.response.send_message(f"Joined book club with timeslot: {choices.value}")
+    # rest of your command
+
+@bot.tree.command(name="leave_book_club")
+@app_commands.describe()
+async def leave_book_club(interaction: discord.Interaction):
+    user_id = interaction.user.id
+    database.delete_member_by_discord_id(user_id)
+    await interaction.response.send_message("You have left the book club")
+
 @tasks.loop(seconds = 10) # repeat after every 10 seconds
 async def myLoop():
     print("Loop")
