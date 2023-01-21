@@ -2,8 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext import tasks
-import csv_helper
 import reddit
+import database
 import os
 import asyncio
 from dotenv import load_dotenv, find_dotenv
@@ -18,7 +18,8 @@ bot = commands.Bot(command_prefix='!', intents = intents)
 
 @bot.event
 async def on_ready():
-    csv_helper.set_all_false()
+
+    database.set_all_streams_inactive()
     verify_channels()
 
     print(f'{bot.user} is now running.')
@@ -41,8 +42,8 @@ async def set_subreddit_stream_channel(interaction: discord.Interaction, subredd
         # Get channel command was run in
         ctx = await bot.get_context(interaction)
 
-        # Store channel and specified subreddit in csv file
-        csv_helper.set_subreddit(ctx.channel.id, subreddit)
+        # Store channel and specified subreddit in database
+        database.add_subreddit(ctx.channel.id, subreddit)
 
         # Send confirmation message
         await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
@@ -56,29 +57,29 @@ async def myLoop():
 
     
 async def start_streams():
-    rows = csv_helper.get_rows()
+    documents = database.get_all_documents("DuneBot", "subreddits")
 
     # Begins a stream for any row that is set to false, then sets the value to true
-    for row in rows:
-        if row[2] == "False":
-            channel_id = row[0]
+    for document in documents:
+        if document["is_active"] == False:
+            channel_id = document["channel_id"]
             channel = bot.get_channel(int(channel_id))
-            subreddit = row[1]
-            csv_helper.update_csv_row(channel_id, "True")
+            subreddit = document["subreddit"]
+            database.set_activity_status(document["_id"], True)
             print("Beginning stream for:", subreddit, "in", bot.get_channel(int(channel_id)))
             await reddit.stream_subreddit(channel_id, channel, subreddit)
             print("stream function terminated")
-            csv_helper.update_csv_row(channel_id, "False")
+            database.set_activity_status(document["_id"], False)
 
 
-# Delete entire row in csv file if the channel does not exist
+# Delete database document if its channel_id does not match a channel on the server
 def verify_channels():
-    rows = csv_helper.get_rows()
+    documents = database.get_all_documents("DuneBot", "subreddits")
 
-    for row in rows:
-        channel_id = row[0]
+    for document in documents:
+        channel_id = document["channel_id"]
         channel = bot.get_channel(int(channel_id))
         if(channel is None):
-            csv_helper.delete_row(rows.index(row))
+            database.delete_subreddit(document["_id"])
 
 bot.run(os.environ.get("TOKEN"))
