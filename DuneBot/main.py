@@ -112,14 +112,21 @@ def get_timeslot_choices():
     return (choices)
 
 @bot.tree.command(name="remove_timeslot")
-@app_commands.choices(choices=get_timeslot_choices())
-async def remove_timeslot(interaction: discord.Interaction, choices: app_commands.Choice[str]):
+async def remove_timeslot(interaction: discord.Interaction, timeslot: str):
 
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
     else:
-        database.delete_timeslot(choices.value)
+        database.delete_timeslot(timeslot)
         await interaction.response.send_message("Timeslot removed.")
+
+@remove_timeslot.autocomplete('timeslot')
+async def autocomplete_callback(interaction: discord.Interaction, current: str):
+    # Do stuff with the "current" parameter, e.g. querying it search results...
+
+    # Then return a list of app_commands.Choice
+    return get_timeslot_choices()
+    
      
 
 @tasks.loop(seconds = 10) # repeat after every 10 seconds
