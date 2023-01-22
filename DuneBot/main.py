@@ -64,6 +64,7 @@ async def stop_subreddit_stream_channel(interaction: discord.Interaction):
         database.delete_subreddit_by_channel_id(channel_id)
         await interaction.response.send_message("Subreddit stream stopped")
 
+
 @bot.tree.command(name="book_club_join")
 @app_commands.choices(choices=[
     app_commands.Choice(name="11 PM CET", value="11 PM CET"),
@@ -80,8 +81,46 @@ async def book_club_join(interaction: discord.Interaction, choices: app_commands
 @app_commands.describe()
 async def leave_book_club(interaction: discord.Interaction):
     user_id = interaction.user.id
-    database.delete_member_by_discord_id(user_id)
-    await interaction.response.send_message("You have left the book club")
+    if database.delete_member_by_discord_id(user_id) > 0:
+        await interaction.response.send_message("You have left the book club")
+    else:
+        await interaction.response.send_message("You are not in the book club")
+
+@bot.tree.command(name="add_timeslot")
+@app_commands.describe(timeslot = "Enter the timeslot you wish to add to the book club. Example: 11PM UTC")
+async def set_subreddit_stream_channel(interaction: discord.Interaction, timeslot: str):
+
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+    else:
+        # Get channel command was run in
+        ctx = await bot.get_context(interaction)
+        if timezone_manager.check_time_format(timeslot):
+            database.add_timeslot(timeslot)
+            await interaction.response.send_message("Timeslot added.")
+        else:
+            await interaction.response.send_message("Specified timeslot is invalid.")
+
+def get_timeslot_choices():
+
+    choices = []
+    timeslots = database.get_all_timeslots()
+
+    for timeslot in timeslots:
+        choices.append(app_commands.Choice(name=timeslot["timeslot"], value=timeslot["timeslot"]))
+
+    return (choices)
+
+@bot.tree.command(name="remove_timeslot")
+@app_commands.choices(choices=get_timeslot_choices())
+async def remove_timeslot(interaction: discord.Interaction, choices: app_commands.Choice[str]):
+
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+    else:
+        database.delete_timeslot(choices.value)
+        await interaction.response.send_message("Timeslot removed.")
+     
 
 @tasks.loop(seconds = 10) # repeat after every 10 seconds
 async def myLoop():

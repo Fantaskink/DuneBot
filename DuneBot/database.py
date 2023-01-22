@@ -97,6 +97,7 @@ def delete_member_by_discord_id(discord_id):
 
     result = collection.delete_one({"discord_id": discord_id})
     print(result.deleted_count, "document(s) deleted.")
+    return(result.deleted_count)
 
 def delete_member(id:str):
     db = client["DuneBot"]
@@ -104,3 +105,26 @@ def delete_member(id:str):
 
     result = collection.delete_one({"_id": id})
     print(result.deleted_count, "document(s) deleted.")
+
+def add_timeslot(timeslot):
+    db = client["DuneBot"]
+    collection = db["timeslots"]
+
+    res = collection.update_one({"timeslot":timeslot}, {"$set": {"timeslot": timeslot}}, upsert=True)
+
+    print(res.acknowledged)
+    print(res.upserted_id)
+
+def delete_timeslot(timeslot):
+    db = client["DuneBot"]
+    collection = db["timeslots"]
+
+    result = collection.delete_one({"timeslot": timeslot})
+    print(result.deleted_count, "document(s) deleted.")
+
+def get_all_timeslots():
+    db = client["DuneBot"]
+    collection = db["timeslots"]
+
+    all_docs = list(collection.find())
+    return all_docs
