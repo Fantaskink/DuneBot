@@ -61,21 +61,26 @@ async def stop_subreddit_stream_channel(interaction: discord.Interaction):
         ctx = await bot.get_context(interaction)
         channel_id = ctx.channel.id
 
-        database.delete_subreddit_by_channel_id(channel_id)
-        await interaction.response.send_message("Subreddit stream stopped")
+        subreddits = database.get_all_documents("DuneBot", "subreddits")
+
+        found = False
+
+        for subreddit in subreddits:
+            if channel_id == subreddit["channel_id"]:
+                found = True
+        
+        if found == True:
+            database.delete_subreddit_by_channel_id(channel_id)
+            await interaction.response.send_message("Subreddit stream stopped")
+        else:
+            await interaction.response.send_message("No subreddit stream active in channel")
 
 
 @bot.tree.command(name="book_club_join")
-@app_commands.choices(choices=[
-    app_commands.Choice(name="11 PM CET", value="11 PM CET"),
-    app_commands.Choice(name="11 PM CT", value="11 PM CT"),
-    app_commands.Choice(name="11 PM PT", value="11 PM PT"),
-    ])
-async def book_club_join(interaction: discord.Interaction, choices: app_commands.Choice[str]):
+async def book_club_join(interaction: discord.Interaction):
     user_id = interaction.user.id
-    database.add_book_club_member(user_id, choices.value)
-    await interaction.response.send_message(f"Joined book club with timeslot: {choices.value}")
-    # rest of your command
+    database.add_book_club_member(user_id, "")
+    await interaction.response.send_message("Joined book club.")
 
 @bot.tree.command(name="leave_book_club")
 @app_commands.describe()
