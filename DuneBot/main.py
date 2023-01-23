@@ -22,6 +22,7 @@ async def on_ready():
 
     database.set_all_streams_inactive()
     verify_channels()
+    await make_poll()
 
     print(f'{bot.user} is now running.')
     try:
@@ -183,5 +184,28 @@ def verify_channels():
         channel = bot.get_channel(int(channel_id))
         if(channel is None):
             database.delete_subreddit(document["_id"])
+
+async def make_poll():
+    guild = bot.guilds[0]
+
+    target_channel_name = "book-club-info"
+    target_channel_id = 0
+    for channel in guild.channels:
+        if channel.name == target_channel_name:
+            target_channel_id = channel.id
+            break
+
+    target_channel = bot.get_channel(target_channel_id)
+    timeslot = database.get_all_timeslots()
+    message = "Vote on the timeslot that suits you the best. You can only vote on one timeslot"
+
+    poll_question = ""
+
+    for timeslot in timeslot:
+        poll_question = poll_question + str(timeslot["timeslot"]) + "\n"
+    
+    await target_channel.send(message)
+    poll_message = await target_channel.send(poll_question)
+    await poll_message.add_reaction("👍")
 
 bot.run(os.environ.get("TOKEN"))
