@@ -47,3 +47,15 @@ def check_time_format(time_string):
                 return False
         except ValueError:
             return False
+        
+def date_to_datetime(date_string):
+    try:
+        year = datetime.datetime.now().year
+        start_date, end_date = date_string.split("-")
+        start_date_object = datetime.datetime.strptime(f'{year} {start_date}', '%Y %b %d')
+        end_date_object = datetime.datetime.strptime(f'{year} {end_date}', '%Y %b %d')
+        start_date_object = pytz.utc.localize(start_date_object)
+        end_date_object = pytz.utc.localize(end_date_object)
+        return start_date_object,end_date_object
+    except ValueError:
+        return False

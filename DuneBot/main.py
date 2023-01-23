@@ -82,7 +82,7 @@ async def book_club_join(interaction: discord.Interaction):
     database.add_book_club_member(user_id, "")
     await interaction.response.send_message("Joined book club.")
 
-@bot.tree.command(name="leave_book_club")
+@bot.tree.command(name="book_club_leave")
 @app_commands.describe()
 async def leave_book_club(interaction: discord.Interaction):
     user_id = interaction.user.id
@@ -106,6 +106,7 @@ async def set_subreddit_stream_channel(interaction: discord.Interaction, timeslo
         else:
             await interaction.response.send_message("Specified timeslot is invalid.")
 
+# Return list of timeslot choices from database
 def get_timeslot_choices():
 
     choices = []
@@ -131,8 +132,22 @@ async def autocomplete_callback(interaction: discord.Interaction, current: str):
 
     # Then return a list of app_commands.Choice
     return get_timeslot_choices()
-    
-     
+
+@bot.tree.command(name="add_meeting")
+@app_commands.describe(date = "Enter the start and end date for the week in the following format: May 31-Jun 6 ", description = "Enter the description for which section to read.")
+async def add_meeting(interaction: discord.Interaction, date: str, description: str):
+
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+    else:
+        # Get channel command was run in
+        ctx = await bot.get_context(interaction)
+        if timezone_manager.date_to_datetime is not False:
+            start_date, end_date = date.split("-")
+            database.add_meeting(start_date, end_date, description)
+            await interaction.response.send_message("Meeting added.")
+        else:
+            await interaction.response.send_message("Specified date is invalid.")
 
 @tasks.loop(seconds = 10) # repeat after every 10 seconds
 async def myLoop():
@@ -146,7 +161,7 @@ async def myLoop():
 async def start_streams():
     documents = database.get_all_documents("DuneBot", "subreddits")
 
-    # Begins a stream for any row that is set to false, then sets the value to true
+    # Begins a stream for any document with "is_active" set to false, then sets the value to true
     for document in documents:
         if document["is_active"] == False:
             channel_id = document["channel_id"]

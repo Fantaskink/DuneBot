@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv, find_dotenv
 from models.subreddit_stream import Subreddit_stream
 from models.book_club_member import Book_club_member
+from models.book_club_meeting import Book_club_meeting
 
 load_dotenv(find_dotenv())
 
@@ -128,3 +129,14 @@ def get_all_timeslots():
 
     all_docs = list(collection.find())
     return all_docs
+
+def add_meeting(start_date, end_date, description):
+    db = client["DuneBot"]
+    collection = db["meetings"]
+
+    book_club_meeting = Book_club_meeting(start_date=start_date, end_date=end_date, description=description).to_mongo().to_dict()
+
+    res = collection.replace_one({"start_date":start_date, "end_date":end_date, "description":description}, book_club_meeting, upsert=True)
+
+    print(res.acknowledged)
+    print(res.upserted_id)
