@@ -7,6 +7,7 @@ import reddit
 import database
 import os
 import asyncio
+import emoji
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -185,27 +186,62 @@ def verify_channels():
         if(channel is None):
             database.delete_subreddit(document["_id"])
 
+@bot.tree.command(name="set_poll_channel")
+async def set_poll_channel(interaction: discord.Interaction):
+
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+    else:
+        # Get channel command was run in
+        ctx = await bot.get_context(interaction)
+        channel_id = ctx.channel.id
+
+        database.add_channel(channel_id, "poll_channel")
+        await interaction.response.send_message("Poll channel set")
+
+async def generate_emotes(timeslots):
+
+    emote_list = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
+
+    emotes = []
+    
+    for i in range(0,len(timeslots)):
+        emotes.append(emote_list[i])
+    
+    return emotes
+
 async def make_poll():
     guild = bot.guilds[0]
 
-    target_channel_name = "book-club-info"
     target_channel_id = 0
-    for channel in guild.channels:
-        if channel.name == target_channel_name:
-            target_channel_id = channel.id
-            break
+    channels = database.get_all_channels()
+
+    for channel in channels:
+        if channel["channel_function"] == "poll_channel":
+            target_channel_id = int(channel["channel_id"])
+    
 
     target_channel = bot.get_channel(target_channel_id)
-    timeslot = database.get_all_timeslots()
+    timeslots = database.get_all_timeslots()
     message = "Vote on the timeslot that suits you the best. You can only vote on one timeslot"
 
     poll_question = ""
 
-    for timeslot in timeslot:
-        poll_question = poll_question + str(timeslot["timeslot"]) + "\n"
+    emotes = await generate_emotes(timeslots)
+    print(emotes)
+
+    for timeslot in timeslots:
+        emote = emotes[timeslots.index(timeslot)]
+        poll_question = poll_question + str(timeslot["timeslot"]) + " " + f"{emote}" + "\n"
+
+    role = discord.utils.get(guild.roles, name="Book Club")
     
-    await target_channel.send(message)
-    poll_message = await target_channel.send(poll_question)
-    await poll_message.add_reaction("👍")
+    #await target_channel.send(message)
+    #poll_message = await target_channel.send(poll_question)
+    poll_message = await target_channel.send(f"Make sure to vote on which time slots to use for the book club meetings {role.mention}", embed=discord.Embed(title=message, description=poll_question))
+    #await poll_message.add_reaction("👍")
+    for emote in emotes:
+        await poll_message.add_reaction(emote)
+
 
 bot.run(os.environ.get("TOKEN"))

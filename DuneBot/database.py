@@ -140,3 +140,22 @@ def add_meeting(start_date, end_date, description):
 
     print(res.acknowledged)
     print(res.upserted_id)
+
+def add_channel(channel_id, channel_function):
+    db = client["DuneBot"]
+    collection = db["channels"]
+
+    # Use update_one to replace the document if it already exists, or insert it if it doesn't
+    res = collection.update_one({"channel_function": channel_function}, {"$set": {"channel_id": channel_id}}, upsert=True)
+
+    print(res.acknowledged)
+    print(res.upserted_id)
+
+def get_all_channels():
+    db = client["DuneBot"]
+    collection = db["channels"]
+
+    # Use find() to retrieve all documents
+    all_channels = list(collection.find())
+
+    return all_channels
