@@ -7,7 +7,6 @@ import reddit
 import database
 import os
 import asyncio
-import emoji
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -201,7 +200,7 @@ async def set_poll_channel(interaction: discord.Interaction):
 
 async def generate_emotes(timeslots):
 
-    emote_list = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
+    emote_list = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵", "🇶", "🇷", "🇸", "🇹", "🇺", "🇻", "🇼", "🇽", "🇾", "🇿"]
 
     emotes = []
     
@@ -232,14 +231,12 @@ async def make_poll():
 
     for timeslot in timeslots:
         emote = emotes[timeslots.index(timeslot)]
-        poll_question = poll_question + str(timeslot["timeslot"]) + " " + f"{emote}" + "\n"
+        poll_question = poll_question + f"{emote}" + " " + str(timeslot["timeslot"]) + "\n"
 
     role = discord.utils.get(guild.roles, name="Book Club")
     
-    #await target_channel.send(message)
-    #poll_message = await target_channel.send(poll_question)
     poll_message = await target_channel.send(f"Make sure to vote on which time slots to use for the book club meetings {role.mention}", embed=discord.Embed(title=message, description=poll_question))
-    #await poll_message.add_reaction("👍")
+    
     for emote in emotes:
         await poll_message.add_reaction(emote)
 
