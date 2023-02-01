@@ -215,12 +215,13 @@ async def make_poll():
     target_channel_id = 0
     channels = database.get_all_channels()
 
+    # Get id of poll channel
     for channel in channels:
         if channel["channel_function"] == "poll_channel":
             target_channel_id = int(channel["channel_id"])
     
-
     target_channel = bot.get_channel(target_channel_id)
+
     timeslots = database.get_all_timeslots()
     message = "Vote on the timeslot that suits you the best. You can only vote on one timeslot"
 
