@@ -23,3 +23,6 @@ Join book club with
 
 Leave with 
 > book_club_leave
+
+Add book club meetings with 
+> /add_meeting "date" "description"
