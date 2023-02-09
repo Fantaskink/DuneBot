@@ -184,14 +184,21 @@ def get_all_channels():
 def set_poll_message(message_id):
     db = client["DuneBot"]
     collection = db["pollmessages"]
+    
+    update = {"message_id": message_id}
 
-    res = collection.update_one({"message_id": message_id}, upsert=True)
+    res = collection.delete_many({})
+    res = collection.insert_one(update)
 
     print(res.acknowledged)
-    print(res.upserted_id)
+    print(res.inserted_id)
+
+
 
 def get_poll_message_id():
     db = client["DuneBot"]
     collection = db["pollmessages"]
 
-    res = collection.find_one()
+    id = collection.find_one()
+
+    return id

@@ -158,8 +158,9 @@ async def myLoop():
     shield_task = asyncio.shield(task)
     print(timezone_manager.get_current_time())
     check_time()
+    await get_poll_results()
 
-    
+
 async def start_streams():
     documents = database.get_all_documents("DuneBot", "subreddits")
 
@@ -243,16 +244,45 @@ async def make_poll():
 
     database.set_poll_message(poll_message.id)
 
-def begin_meeting(meeting, timeslot):
-    pass
+async def get_poll_results():
 
+    channels = database.get_all_channels()
+
+    # Get id of poll channel
+    target_channel_id = 0
+    for channel in channels:
+        if channel["channel_function"] == "poll_channel":
+            target_channel_id = int(channel["channel_id"])
+
+    target_channel = bot.get_channel(target_channel_id)
+
+    message_document = database.get_poll_message_id()
+    message_id = message_document["message_id"]
+    try:
+        message = await target_channel.fetch_message(message_id)
+    except Exception:
+        print("No poll message")
+        return
+
+    reactions = message.reactions
+
+    for reaction in reactions:
+        # I do not actually recommend doing this.
+        async for user in reaction.users():
+            print(f'{user} has reacted with {reaction.emoji}!')
+
+
+def begin_meeting(meeting, timeslot):
+    print("begin meeting")
+    pass
 
 def check_time():
     meetings = database.get_meetings()
     timeslots = database.get_all_timeslots()
 
     for meeting in meetings:
-        if meeting["has_been_held"] == False and timezone_manager.is_past_datetime(meeting["start_date"]):
+        meeting_datetime = timezone_manager.date_to_datetime(meeting["start_date"])
+        if meeting["has_been_held"] == False and timezone_manager.is_past_datetime(meeting_datetime):
             for timeslot in timeslots:
                 date_time = timezone_manager.string_to_datetime(timeslot["timeslot"])
                 if timezone_manager.is_past_datetime(date_time) and timeslot["has_been_held"] == False:

@@ -16,7 +16,7 @@ async def stream_subreddit(channel_id, channel, sub):
     
         # Retrieve subreddit instance using subreddit name
         subreddit = await reddit.subreddit(str(sub))
-        async for submission in subreddit.stream.submissions(skip_existing=False):
+        async for submission in subreddit.stream.submissions(skip_existing=True):
             documents = get_all_documents("DuneBot", "subreddits")
 
             channel_and_sub_valid = False

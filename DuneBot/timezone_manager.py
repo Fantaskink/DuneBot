@@ -31,7 +31,7 @@ def string_to_datetime(time_string):
 
 
 # Checks whether string translates to valid datetime object
-def check_time_format(time_string):
+def check_timeslot_format(time_string):
     try:
         time_format = "%I%p %Z"
         time_object = datetime.strptime(time_string, time_format)
@@ -50,12 +50,10 @@ def check_time_format(time_string):
         
 def date_to_datetime(date_string):
     try:
-        year = datetime.datetime.now().year
-        start_date, end_date = date_string.split("-")
-        start_date_object = datetime.datetime.strptime(f'{year} {start_date}', '%Y %b %d')
-        end_date_object = datetime.datetime.strptime(f'{year} {end_date}', '%Y %b %d')
-        start_date_object = pytz.utc.localize(start_date_object)
-        end_date_object = pytz.utc.localize(end_date_object)
-        return start_date_object,end_date_object
+        year = datetime.now().year
+        
+        date_object = datetime.strptime(f'{year} {date_string}', '%Y %b %d')
+        date_object = pytz.utc.localize(date_object)
+        return date_object
     except ValueError:
         return False
