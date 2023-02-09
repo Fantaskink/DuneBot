@@ -134,7 +134,11 @@ def set_timeslot_status(id):
     db = client["DuneBot"]
     collection = db["timeslots"]
 
-    result = collection.update_one({"has_been_held": True}, {"$set": {"_id": id}}, upsert=True)
+    update_operation = {"$set": {"has_been_held": True}}
+
+    result = collection.update_one({"_id": id}, update_operation)
+
+    return result.modified_count
 
 def add_meeting(start_date, end_date, description):
     db = client["DuneBot"]

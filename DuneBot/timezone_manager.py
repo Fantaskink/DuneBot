@@ -20,14 +20,20 @@ def is_past_datetime(target_datetime):
 
 # Convert string to datetime object
 def string_to_datetime(time_string):
-    
-    # The format of the string
-    time_format = "%I%p %Z"
+    try:
+        # The format of the string
+        time_format = "%I%p %Z"
 
-    # Convert the string to a datetime object
-    time_object = datetime.strptime(time_string, time_format)
+        # Convert the string to a datetime object
+        time_object = datetime.strptime(time_string, time_format)
 
-    return(time_object)
+        # Set the timezone
+        utc = pytz.utc
+        time_object = utc.localize(time_object, is_dst=None)
+
+        return time_object
+    except ValueError:
+        return False
 
 
 # Checks whether string translates to valid datetime object
@@ -51,9 +57,9 @@ def check_timeslot_format(time_string):
 def date_to_datetime(date_string):
     try:
         year = datetime.now().year
-        
         date_object = datetime.strptime(f'{year} {date_string}', '%Y %b %d')
         date_object = pytz.utc.localize(date_object)
         return date_object
     except ValueError:
         return False
+    

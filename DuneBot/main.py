@@ -143,8 +143,9 @@ async def add_meeting(interaction: discord.Interaction, date: str, description: 
     else:
         # Get channel command was run in
         ctx = await bot.get_context(interaction)
-        if timezone_manager.date_to_datetime is not False:
-            start_date, end_date = date.split("-")
+        start_date, end_date = date.split("-")
+        if timezone_manager.date_to_datetime(start_date) is not False and timezone_manager.date_to_datetime(end_date) is not False:
+            
             database.add_meeting(start_date, end_date, description)
             await interaction.response.send_message("Meeting added.")
         else:
@@ -152,11 +153,9 @@ async def add_meeting(interaction: discord.Interaction, date: str, description: 
 
 @tasks.loop(seconds = 10) # repeat after every 10 seconds
 async def myLoop():
-    print("Loop")
     verify_channels()
     task = asyncio.create_task(start_streams())
     shield_task = asyncio.shield(task)
-    print(timezone_manager.get_current_time())
     check_time()
     await get_poll_results()
 
@@ -269,12 +268,12 @@ async def get_poll_results():
     for reaction in reactions:
         # I do not actually recommend doing this.
         async for user in reaction.users():
-            print(f'{user} has reacted with {reaction.emoji}!')
+            pass
+            #print(f'{user} has reacted with {reaction.emoji}!')
 
 
 def begin_meeting(meeting, timeslot):
     print("begin meeting")
-    pass
 
 def check_time():
     meetings = database.get_meetings()
@@ -282,9 +281,14 @@ def check_time():
 
     for meeting in meetings:
         meeting_datetime = timezone_manager.date_to_datetime(meeting["start_date"])
-        if meeting["has_been_held"] == False and timezone_manager.is_past_datetime(meeting_datetime):
+        print("Meeting date", meeting_datetime)
+        print("Current", timezone_manager.get_current_time())
+        if meeting["has_been_held"] is False and timezone_manager.is_past_datetime(meeting_datetime) is True:
             for timeslot in timeslots:
+                current = timezone_manager.get_current_time()
                 date_time = timezone_manager.string_to_datetime(timeslot["timeslot"])
+                print("Current time:", current)
+                print("Timeslot", date_time)
                 if timezone_manager.is_past_datetime(date_time) and timeslot["has_been_held"] == False:
                     begin_meeting(meeting, timeslot)
                     database.set_timeslot_status(timeslot["_id"])
