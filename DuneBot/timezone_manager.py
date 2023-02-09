@@ -63,3 +63,7 @@ def date_to_datetime(date_string):
     except ValueError:
         return False
     
+
+def combine_datetime(datetime_1, datetime_2):
+    combined = datetime_1.replace(hour=datetime_2.hour, minute=datetime_2.minute, second=datetime_2.second, microsecond=datetime_2.microsecond, tzinfo=datetime_2.tzinfo)
+    return combined

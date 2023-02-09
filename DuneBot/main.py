@@ -280,16 +280,22 @@ def check_time():
     timeslots = database.get_all_timeslots()
 
     for meeting in meetings:
+
         meeting_datetime = timezone_manager.date_to_datetime(meeting["start_date"])
-        print("Meeting date", meeting_datetime)
-        print("Current", timezone_manager.get_current_time())
+
         if meeting["has_been_held"] is False and timezone_manager.is_past_datetime(meeting_datetime) is True:
+
             for timeslot in timeslots:
+
                 current = timezone_manager.get_current_time()
-                date_time = timezone_manager.string_to_datetime(timeslot["timeslot"])
+                timeslot_date_time = timezone_manager.string_to_datetime(timeslot["timeslot"])
+
+                compound = timezone_manager.combine_datetime(meeting_datetime, timeslot_date_time)
+
                 print("Current time:", current)
-                print("Timeslot", date_time)
-                if timezone_manager.is_past_datetime(date_time) and timeslot["has_been_held"] == False:
+                print("Timeslot", compound)
+
+                if timezone_manager.is_past_datetime(compound) and timeslot["has_been_held"] == False:
                     begin_meeting(meeting, timeslot)
                     database.set_timeslot_status(timeslot["_id"])
 
