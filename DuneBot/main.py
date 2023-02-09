@@ -101,7 +101,7 @@ async def set_subreddit_stream_channel(interaction: discord.Interaction, timeslo
     else:
         # Get channel command was run in
         ctx = await bot.get_context(interaction)
-        if timezone_manager.check_time_format(timeslot):
+        if timezone_manager.check_timeslot_format(timeslot):
             database.add_timeslot(timeslot)
             await interaction.response.send_message("Timeslot added.")
         else:
@@ -157,6 +157,7 @@ async def myLoop():
     task = asyncio.create_task(start_streams())
     shield_task = asyncio.shield(task)
     print(timezone_manager.get_current_time())
+    check_time()
 
     
 async def start_streams():
@@ -173,7 +174,6 @@ async def start_streams():
             await reddit.stream_subreddit(channel_id, channel, subreddit)
             print("stream function terminated")
             database.set_activity_status(document["_id"], False)
-
 
 # Delete database document if its channel_id does not match a channel on the server
 def verify_channels():
@@ -240,6 +240,24 @@ async def make_poll():
     
     for emote in emotes:
         await poll_message.add_reaction(emote)
+
+    database.set_poll_message(poll_message.id)
+
+def begin_meeting(meeting, timeslot):
+    pass
+
+
+def check_time():
+    meetings = database.get_meetings()
+    timeslots = database.get_all_timeslots()
+
+    for meeting in meetings:
+        if meeting["has_been_held"] == False and timezone_manager.is_past_datetime(meeting["start_date"]):
+            for timeslot in timeslots:
+                date_time = timezone_manager.string_to_datetime(timeslot["timeslot"])
+                if timezone_manager.is_past_datetime(date_time) and timeslot["has_been_held"] == False:
+                    begin_meeting(meeting, timeslot)
+                    database.set_timeslot_status(timeslot["_id"])
 
 
 bot.run(os.environ.get("TOKEN"))

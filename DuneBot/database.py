@@ -111,7 +111,7 @@ def add_timeslot(timeslot):
     db = client["DuneBot"]
     collection = db["timeslots"]
 
-    res = collection.update_one({"timeslot":timeslot}, {"$set": {"timeslot": timeslot}}, upsert=True)
+    res = collection.update_one({"timeslot":timeslot, "has_been_held":False}, {"$set": {"timeslot": timeslot}}, upsert=True)
 
     print(res.acknowledged)
     print(res.upserted_id)
@@ -130,16 +130,37 @@ def get_all_timeslots():
     all_docs = list(collection.find())
     return all_docs
 
+def set_timeslot_status(id):
+    db = client["DuneBot"]
+    collection = db["timeslots"]
+
+    result = collection.update_one({"has_been_held": True}, {"$set": {"_id": id}}, upsert=True)
+
 def add_meeting(start_date, end_date, description):
     db = client["DuneBot"]
     collection = db["meetings"]
 
-    book_club_meeting = Book_club_meeting(start_date=start_date, end_date=end_date, description=description).to_mongo().to_dict()
+    book_club_meeting = Book_club_meeting(start_date=start_date, end_date=end_date, description=description, has_been_held=False).to_mongo().to_dict()
 
     res = collection.replace_one({"start_date":start_date, "end_date":end_date, "description":description}, book_club_meeting, upsert=True)
 
     print(res.acknowledged)
     print(res.upserted_id)
+
+
+def get_meetings():
+    db = client["DuneBot"]
+    collection = db["meetings"]
+
+    all_channels = list(collection.find())
+
+    return all_channels
+
+def set_meeting_status(id):
+    db = client["DuneBot"]
+    collection = db["meetings"]
+
+    result = collection.update_one({"has_been_held": True}, {"$set": {"_id": id}}, upsert=True)
 
 def add_channel(channel_id, channel_function):
     db = client["DuneBot"]
@@ -159,3 +180,18 @@ def get_all_channels():
     all_channels = list(collection.find())
 
     return all_channels
+
+def set_poll_message(message_id):
+    db = client["DuneBot"]
+    collection = db["pollmessages"]
+
+    res = collection.update_one({"message_id": message_id}, upsert=True)
+
+    print(res.acknowledged)
+    print(res.upserted_id)
+
+def get_poll_message_id():
+    db = client["DuneBot"]
+    collection = db["pollmessages"]
+
+    res = collection.find_one()
