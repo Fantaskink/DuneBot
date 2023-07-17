@@ -14,7 +14,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 global bot
-bot = commands.Bot(command_prefix='!', intents = intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
+
 
 @bot.event
 async def on_ready():
@@ -28,54 +29,86 @@ async def on_ready():
     except Exception as e:
         print(e)
 
-    myLoop.start()
+    loop.start()
+
 
 # Set up subreddit streaming in specific channel
 @bot.tree.command(name="stream_subreddit")
-@app_commands.describe(subreddit = "Type the name of the subreddit you wish to stream content from.")
+@app_commands.describe(subreddit="Type the name of the subreddit you wish to stream content from.")
 async def set_subreddit_stream_channel(interaction: discord.Interaction, subreddit: str):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+    else:
+        # Get channel command was run in
+        ctx = await bot.get_context(interaction)
 
-    # Get channel command was run in
-    ctx = await bot.get_context(interaction)
+        # Store channel and specified subreddit in database if subreddit exists
+        if await reddit.check_subreddit_exists(subreddit):
+            database.add_subreddit(ctx.channel.id, subreddit)
+            # Send confirmation message
+            await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
+        else:
+            await interaction.response.send_message(f"r/{subreddit} does not exist")
 
-    # Store channel and specified subreddit in csv file
-    csv_helper.set_subreddit(ctx.channel.id, subreddit)
 
-    # Send confirmation message
-    await interaction.response.send_message(f"Channel now streaming submissions from r/{subreddit}")
+@bot.tree.command(name="stop_stream")
+@app_commands.describe()
+async def stop_subreddit_stream_channel(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+    else:
+        # Get channel command was run in
+        ctx = await bot.get_context(interaction)
+        channel_id = ctx.channel.id
 
-@tasks.loop(seconds = 10) # repeat after every 10 seconds
-async def myLoop():
+        subreddits = database.get_all_documents("DuneBot", "subreddits")
+
+        found = False
+
+        for subreddit in subreddits:
+            if channel_id == subreddit["channel_id"]:
+                found = True
+
+        if found:
+            database.delete_subreddit_by_channel_id(channel_id)
+            await interaction.response.send_message("Subreddit stream stopped")
+        else:
+            await interaction.response.send_message("No subreddit stream active in channel")
+
+
+@tasks.loop(seconds=10)  # repeat after every 10 seconds
+async def loop():
     print("Loop")
     verify_channels()
     task = asyncio.create_task(start_streams())
     shield_task = asyncio.shield(task)
 
-    
-async def start_streams():
-    rows = csv_helper.get_rows()
 
-    # Begins a stream for any row that is set to false, then sets the value to true
-    for row in rows:
-        if row[2] == "False":
-            channel_id = row[0]
+async def start_streams():
+    documents = database.get_all_documents("DuneBot", "subreddits")
+
+    # Begins a stream for any document with "is_active" set to false, then sets the value to true
+    for document in documents:
+        if not document["is_active"]:
+            channel_id = document["channel_id"]
             channel = bot.get_channel(int(channel_id))
-            subreddit = row[1]
-            csv_helper.update_csv_row(channel_id, "True")
+            subreddit = document["subreddit"]
+            database.set_activity_status(document["_id"], True)
             print("Beginning stream for:", subreddit, "in", bot.get_channel(int(channel_id)))
             await reddit.stream_subreddit(channel_id, channel, subreddit)
             print("stream function terminated")
-            csv_helper.update_csv_row(channel_id, "False")
+            database.set_activity_status(document["_id"], False)
 
 
-# Delete entire row in csv file if the channel does not exist
+# Delete database document if its channel_id does not match a channel on the server
 def verify_channels():
-    rows = csv_helper.get_rows()
+    documents = database.get_all_documents("DuneBot", "subreddits")
 
-    for row in rows:
-        channel_id = row[0]
+    for document in documents:
+        channel_id = document["channel_id"]
         channel = bot.get_channel(int(channel_id))
-        if(channel is None):
-            csv_helper.delete_row(rows.index(row))
+        if channel is None:
+            database.delete_subreddit(document["_id"])
+
 
 bot.run(os.environ.get("TOKEN"))
