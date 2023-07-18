@@ -24,11 +24,10 @@ async def stream_subreddit(channel_id, channel, sub):
 
             for document in documents:
 
-                if channel_id == document["channel_id"] and sub == document["subreddit"] and document[
-                    "is_active"] == True:
+                if channel_id == document["channel_id"] and sub == document["subreddit"] and document["is_active"]:
                     channel_and_sub_valid = True
 
-            if channel_and_sub_valid == True:
+            if channel_and_sub_valid:
                 await send_submission(channel, submission)
             else:
                 print("Channel and sub no longer valid")
