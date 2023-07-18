@@ -39,7 +39,7 @@ async def on_message(message: discord.Message):
         return
     
     # List of keywords to look for
-    keywords = ['Leto II', 'Miles Teg', 'Golden path', 'God Emperor', 'died', 'dies', 'Ghanima', 'Siona', 'Tleilaxu']
+    keywords = ['Leto II', 'Miles Teg', 'Golden path', 'God Emperor', 'died', 'dies', 'Ghanima', 'Siona', 'Tleilaxu', 'death']
 
     marked_as_spoiler = message.content.count("||") == 2
 
