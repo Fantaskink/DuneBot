@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord.ext import tasks
 import csv_helper
 import reddit
+import database
 import os
 import asyncio
 from dotenv import load_dotenv, find_dotenv
