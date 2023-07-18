@@ -33,7 +33,7 @@ async def on_ready():
     loop.start()
 
 @bot.event
-async def on_message(message):
+async def on_message(message: discord.Message):
     # Ignore messages from the bot itself to prevent potential loops
     if message.author == bot.user:
         return
@@ -41,13 +41,15 @@ async def on_message(message):
     # List of keywords to look for
     keywords = ['Leto II', 'Miles Teg', 'Golden path', 'God Emperor', 'died', 'dies', 'Ghanima', 'Siona', 'Tleilaxu']
 
+    marked_as_spoiler = message.content.count("||") == 2
+
     # Check if the message is from the desired channel (replace 'CHANNEL_ID' with your channel ID)
     if message.channel.id == 1130972092570009632:
         # Process the message for keywords
         for keyword in keywords:
-            if keyword.lower() in message.content.lower():
+            if keyword.lower() in message.content.lower() and not marked_as_spoiler:
                 # Do something when a keyword is found (you can send a response, react to the message, etc.)
-                await message.channel.send(f"Please be mindful of spoilers, {message.author.mention}!")
+                await message.channel.send(f"Please be mindful of spoilers! Use '/spoiler' when discussing plot points from later books.")
 
     # Allow other event listeners (commands, etc.) to continue functioning
     await bot.process_commands(message)
@@ -100,7 +102,7 @@ async def stop_subreddit_stream_channel(interaction: discord.Interaction):
 
 @tasks.loop(seconds=10)  # repeat after every 10 seconds
 async def loop():
-    print("Loop")
+    #print("Loop")
     verify_channels()
     task = asyncio.create_task(start_streams())
     shield_task = asyncio.shield(task)
