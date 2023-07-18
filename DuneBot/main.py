@@ -2,7 +2,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext import tasks
-import csv_helper
 import reddit
 import database
 import os
@@ -20,7 +19,8 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 @bot.event
 async def on_ready():
-    csv_helper.set_all_false()
+
+    database.set_all_streams_inactive()
     verify_channels()
 
     print(f'{bot.user} is now running.')
