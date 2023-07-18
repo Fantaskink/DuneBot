@@ -32,6 +32,27 @@ async def on_ready():
 
     loop.start()
 
+@bot.event
+async def on_message(message):
+    # Ignore messages from the bot itself to prevent potential loops
+    if message.author == bot.user:
+        return
+    
+    # List of keywords to look for
+    keywords = ['Leto II', 'Miles Teg', 'Golden path', 'God Emperor', 'died', 'dies', 'Ghanima', 'Siona', 'Tleilaxu']
+
+    # Check if the message is from the desired channel (replace 'CHANNEL_ID' with your channel ID)
+    if message.channel.id == 1130972092570009632:
+        # Process the message for keywords
+        for keyword in keywords:
+            if keyword.lower() in message.content.lower():
+                # Do something when a keyword is found (you can send a response, react to the message, etc.)
+                await message.channel.send(f"Please be mindful of spoilers, {message.author.mention}!")
+
+    # Allow other event listeners (commands, etc.) to continue functioning
+    await bot.process_commands(message)
+
+
 
 # Set up subreddit streaming in specific channel
 @bot.tree.command(name="stream_subreddit")
