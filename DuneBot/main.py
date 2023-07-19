@@ -5,7 +5,7 @@ from discord.ext import tasks
 import reddit
 import database
 import os
-import asyncio
+#import asyncio
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -20,8 +20,8 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 @bot.event
 async def on_ready():
 
-    database.set_all_streams_inactive()
-    verify_channels()
+    #database.set_all_streams_inactive()
+    #verify_channels()
 
     print(f'{bot.user} is now running.')
     try:
@@ -39,7 +39,12 @@ async def on_message(message: discord.Message):
         return
     
     # List of keywords to look for
-    keywords = ['Leto II', 'Miles Teg', 'Golden path', 'God Emperor', 'died', 'dies', 'Ghanima', 'Siona', 'Tleilaxu', 'death']
+    keywords = ['Leto II', 'Miles Teg', 'Golden path', 'God Emperor', 'Ghanima',
+                'Siona', 'Tleilaxu', 'Ghola', 'Futar', 'Rakis', 'Stone Burner',
+                'T-probe', 'Axolotl Tank', 'Honored Matres', 'The Scattering',
+                'Famine Times', 'Laza Tiger', 'D-wolves', 'No-ship', 'No-room',
+                'Gammu', 'Jacurutu', 'Siaynoq', 'Shuloch', 'Hayt', 'Spider Queen',
+                'Daniel and Marty', 'Lampadas']
 
     marked_as_spoiler = message.content.count("||") == 2
 
@@ -55,6 +60,7 @@ async def on_message(message: discord.Message):
     await bot.process_commands(message)
 
 
+'''
 
 # Set up subreddit streaming in specific channel
 @bot.tree.command(name="stream_subreddit")
@@ -100,6 +106,8 @@ async def stop_subreddit_stream_channel(interaction: discord.Interaction):
             await interaction.response.send_message("No subreddit stream active in channel")
 
 
+
+
 @tasks.loop(seconds=10)  # repeat after every 10 seconds
 async def loop():
     #print("Loop")
@@ -133,6 +141,9 @@ def verify_channels():
         channel = bot.get_channel(int(channel_id))
         if channel is None:
             database.delete_subreddit(document["_id"])
+
+            
+'''
 
 
 bot.run(os.environ.get("TOKEN"))
