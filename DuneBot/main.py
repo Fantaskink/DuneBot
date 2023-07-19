@@ -30,7 +30,7 @@ async def on_ready():
     except Exception as e:
         print(e)
 
-    loop.start()
+    #loop.start()
 
 @bot.event
 async def on_message(message: discord.Message):
