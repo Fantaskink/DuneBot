@@ -65,7 +65,7 @@ async def on_message(message: discord.Message):
             for keyword in keywords:
                 if keyword.lower() in message.content.lower() and not marked_as_spoiler:
                     # Do something when a keyword is found (you can send a response, react to the message, etc.)
-                    await message.channel.send(f"Please be mindful of spoilers! Use '/spoiler' when discussing plot points from later books.")
+                    await message.channel.send(f"Please be mindful of spoilers! Surround spoilers with '||' when discussing plot points from later books.")
                     await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}, triggered by keyword: {keyword}.\nJump to message: {message.jump_url}")
     
 
