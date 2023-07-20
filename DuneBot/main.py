@@ -2,8 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext import tasks
-import reddit
-import database
+#import reddit
+#import database
 import os
 #import asyncio
 from dotenv import load_dotenv, find_dotenv
@@ -45,16 +45,29 @@ async def on_message(message: discord.Message):
                 'Famine Times', 'Laza Tiger', 'D-wolves', 'No-ship', 'No-room',
                 'Gammu', 'Jacurutu', 'Siaynoq', 'Shuloch', 'Hayt', 'Spider Queen',
                 'Daniel and Marty', 'Lampadas']
+    
+    channel_ids = [1130972092570009632, #test
+                   702080128997654548, #first time reader
+                   701682574308671549, #art-chat
+                   702098070929670144, #quotes
+                   701703110770557008, #expanded
+                   1123127087532879902, #book discussions
+                   1103026663127789658, #book club rereaders
+                   ]
 
     marked_as_spoiler = message.content.count("||") == 2
+    modlog_channel = bot.get_channel(1131571647665672262)
 
     # Check if the message is from the desired channel (replace 'CHANNEL_ID' with your channel ID)
-    if message.channel.id == 1130972092570009632:
-        # Process the message for keywords
-        for keyword in keywords:
-            if keyword.lower() in message.content.lower() and not marked_as_spoiler:
-                # Do something when a keyword is found (you can send a response, react to the message, etc.)
-                await message.channel.send(f"Please be mindful of spoilers! Use '/spoiler' when discussing plot points from later books.")
+    for id in channel_ids:
+        if message.channel.id == id:
+            # Process the message for keywords
+            for keyword in keywords:
+                if keyword.lower() in message.content.lower() and not marked_as_spoiler:
+                    # Do something when a keyword is found (you can send a response, react to the message, etc.)
+                    await message.channel.send(f"Please be mindful of spoilers! Use '/spoiler' when discussing plot points from later books.")
+                    await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}, triggered by keyword: {keyword}.\nJump to message: {message.jump_url}")
+    
 
     # Allow other event listeners (commands, etc.) to continue functioning
     await bot.process_commands(message)
