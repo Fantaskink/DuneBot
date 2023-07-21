@@ -16,6 +16,8 @@ intents.message_content = True
 global bot
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+environment = os.environ.get("ENVIRONMENT")
+
 
 @bot.event
 async def on_ready():
@@ -46,23 +48,30 @@ async def on_message(message: discord.Message):
                 'Gammu', 'Jacurutu', 'Siaynoq', 'Shuloch', 'Hayt', 'Spider Queen',
                 'Daniel and Marty', 'Lampadas']
     
-    channel_ids = [1130972092570009632, #test
-                   701674250591010840, #general
-                   768612534076833864, #filmbook
-                   751681926527582329, #cinematv
-                   751682462001659986, #nondunebooks
-                   751684353523843165, #games
-                   753460736579207208, #offtopic
-                   715906624887193702, #baliset
-                   701883990369370134, #sietchposting
-                   702080128997654548, #first time reader
-                   701690551996776459, #moviesofdune
-                   701726640719396905, #gamesofdune
+    if environment == "production":
+        modlog_channel = bot.get_channel(701710310121275474)
+        channel_ids = [
+                   701674250591010840,  #general
+                   768612534076833864,  #filmbook
+                   751681926527582329,  #cinematv
+                   751682462001659986,  #nondunebooks
+                   751684353523843165,  #games
+                   753460736579207208,  #offtopic
+                   715906624887193702,  #baliset
+                   701883990369370134,  #sietchposting
+                   702080128997654548,  #first time reader
+                   701690551996776459,  #moviesofdune
+                   701726640719396905,  #gamesofdune
                    1068027156455755806, #heretical
                    ]
+    elif environment == "development":
+        modlog_channel = bot.get_channel(1131571647665672262)
+        channel_ids = [1130972092570009632] #test
+    
+    
 
     marked_as_spoiler = message.content.count("||") == 2
-    modlog_channel = bot.get_channel(701710310121275474)
+    
 
     # Check if the message is from the desired channel (replace 'CHANNEL_ID' with your channel ID)
     for id in channel_ids:
