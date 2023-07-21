@@ -73,6 +73,7 @@ async def on_message(message: discord.Message):
                     # Do something when a keyword is found (you can send a response, react to the message, etc.)
                     await message.reply(f"Please be mindful of spoilers in this channel! Surround spoilers with '||' when discussing plot points from later books.")
                     await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}, triggered by keyword: {keyword}.\nJump to message: {message.jump_url}")
+                    break
     
 
     # Allow other event listeners (commands, etc.) to continue functioning
