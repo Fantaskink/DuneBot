@@ -6,6 +6,7 @@ from discord.ext import tasks
 #import database
 import os
 import asyncio
+import re
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -17,6 +18,7 @@ global bot
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 environment = os.environ.get("ENVIRONMENT")
+print("Environment:", environment)
 
 
 @bot.event
@@ -66,11 +68,7 @@ async def on_message(message: discord.Message):
                    ]
     elif environment == "development":
         modlog_channel = bot.get_channel(1131571647665672262)
-        channel_ids = [1130972092570009632] #test
-    
-    
-
-    marked_as_spoiler = message.content.count("||") == 2
+        channel_ids = [1130972092570009632] #test channel
     
 
     # Check if the message is from the desired channel (replace 'CHANNEL_ID' with your channel ID)
@@ -78,8 +76,7 @@ async def on_message(message: discord.Message):
         if message.channel.id == id:
             # Process the message for keywords
             for keyword in keywords:
-                if keyword.lower() in message.content.lower() and not marked_as_spoiler:
-                    # Do something when a keyword is found (you can send a response, react to the message, etc.)
+                if keyword.lower() in message.content.lower() and not is_marked_spoiler(message.content.lower(), keyword.lower()):
                     await message.reply(f"Please be mindful of spoilers in this channel! Surround spoilers with '||' when discussing plot points from later books.")
                     await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}, triggered by keyword: {keyword}.\nJump to message: {message.jump_url}")
                     break
@@ -87,6 +84,10 @@ async def on_message(message: discord.Message):
 
     # Allow other event listeners (commands, etc.) to continue functioning
     await bot.process_commands(message)
+
+def is_marked_spoiler(text, keyword):
+    pattern = rf'.*\|\|.*{re.escape(keyword)}.*\|\|.*'
+    return re.match(pattern, text)
 
 
 '''
