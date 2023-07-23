@@ -96,7 +96,8 @@ def leave_unintended_guilds():
     for guild in bot.guilds:
         if guild.id != 701674250591010837 or guild.id != 1064479981012533300:
             print("Leaving guild:", guild.name)
-            bot.leave_guild(guild)
+            guild.leave()
+            
 
 
 '''
