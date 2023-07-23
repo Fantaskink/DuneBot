@@ -24,6 +24,8 @@ print("Environment:", environment)
 @bot.event
 async def on_ready():
 
+    leave_unintended_guilds()
+
     #database.set_all_streams_inactive()
     #verify_channels()
 
@@ -88,6 +90,13 @@ async def on_message(message: discord.Message):
 def is_marked_spoiler(text, keyword):
     pattern = rf'.*\|\|.*{re.escape(keyword)}.*\|\|.*'
     return re.match(pattern, text)
+
+
+def leave_unintended_guilds():
+    for guild in bot.guilds:
+        if guild.id != 701674250591010837 or guild.id != 1064479981012533300:
+            print("Leaving guild:", guild.name)
+            bot.leave_guild(guild)
 
 
 '''
