@@ -24,8 +24,6 @@ print("Environment:", environment)
 @bot.event
 async def on_ready():
 
-    await leave_unintended_guilds()
-
     #database.set_all_streams_inactive()
     #verify_channels()
 
