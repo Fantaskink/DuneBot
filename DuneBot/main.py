@@ -89,15 +89,6 @@ def is_marked_spoiler(text, keyword):
     pattern = rf'.*\|\|.*{re.escape(keyword)}.*\|\|.*'
     return re.match(pattern, text)
 
-
-async def leave_unintended_guilds():
-    for guild in bot.guilds:
-        if guild.id != 701674250591010837 and guild.id != 1064479981012533300:
-            print("Leaving guild:", guild.name)
-            await guild.leave()
-            
-
-
 '''
 
 # Set up subreddit streaming in specific channel
