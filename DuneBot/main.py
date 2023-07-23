@@ -92,7 +92,7 @@ def is_marked_spoiler(text, keyword):
 
 async def leave_unintended_guilds():
     for guild in bot.guilds:
-        if guild.id != 701674250591010837 or guild.id != 1064479981012533300:
+        if guild.id != 701674250591010837 and guild.id != 1064479981012533300:
             print("Leaving guild:", guild.name)
             await guild.leave()
             
