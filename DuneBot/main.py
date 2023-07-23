@@ -44,7 +44,7 @@ async def on_message(message: discord.Message):
     
     # List of keywords to look for
     keywords = ['Leto II', 'Miles Teg', 'Golden path', 'God Emperor', 'Ghanima',
-                'Siona', 'Tleilaxu', 'Ghola', 'Futar', 'Rakis', 'Stone Burner',
+                ' Siona ', 'Tleilaxu', 'Ghola', 'Futar', ' Rakis ', 'Stone Burner',
                 'T-probe', 'Axolotl Tank', 'Honored Matres', 'The Scattering',
                 'Famine Times', 'Laza Tiger', 'D-wolves', 'No-ship', 'No-room',
                 'Gammu', 'Jacurutu', 'Siaynoq', 'Shuloch', 'Hayt', 'Spider Queen',
