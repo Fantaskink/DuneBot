@@ -38,6 +38,10 @@ async def on_ready():
 
 @bot.event
 async def on_message(message: discord.Message):
+    await check_spoiler(message)
+    
+
+async def check_spoiler(message):
     # Ignore messages from the bot itself to prevent potential loops
     if message.author == bot.user:
         return
