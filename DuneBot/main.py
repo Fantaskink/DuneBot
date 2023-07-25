@@ -47,7 +47,7 @@ async def check_spoiler(message):
         return
     
     # List of keywords to look for
-    keywords = ['Leto II', 'Miles Teg', 'Golden path', 'God Emperor', 'Ghanima',
+    keywords = ['Leto II', 'Miles Teg', 'Golden path', 'Ghanima',
                 ' Siona ', 'Tleilaxu', 'Ghola', 'Futar', ' Rakis ', 'Stone Burner',
                 'T-probe', 'Axolotl Tank', 'Honored Matres', 'The Scattering',
                 'Famine Times', 'Laza Tiger', 'D-wolves', 'No-ship', 'No-room',
