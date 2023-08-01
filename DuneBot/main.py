@@ -142,7 +142,7 @@ async def get_days_until_string(target_date_str):
 @bot.tree.command(name="print_spoiler_keywords")
 @app_commands.describe()
 async def print_spoiler_keywords(interaction: discord.Interaction):
-    if not interaction.user.guild_permissions.administrator:
+    if not interaction.user.guild_permissions.ban_members:
         await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
         return
 
@@ -154,7 +154,7 @@ async def print_spoiler_keywords(interaction: discord.Interaction):
 @app_commands.describe(keyword="Type in a keyword you wish to be considered a spoiler.")
 async def add_spoiler_keyword(interaction: discord.Interaction, keyword: str):
 
-    if not interaction.user.guild_permissions.administrator:
+    if not interaction.user.guild_permissions.ban_members:
         await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
         return
     
