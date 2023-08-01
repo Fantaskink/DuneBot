@@ -89,7 +89,10 @@ async def check_spoiler(message):
     await bot.process_commands(message)
 
 async def get_spoiler_keywords():
-    file_path = 'DuneBot/keywords.csv'
+    if environment == "production":
+        file_path = '/home/ubuntu/DuneBot/DuneBot/keywords.csv'
+    elif environment == "development":
+        file_path = 'DuneBot/keywords.csv'
     keywords = []
 
     with open(file_path, 'r', newline='') as csvfile:
