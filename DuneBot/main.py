@@ -90,9 +90,9 @@ async def check_spoiler(message):
 
 async def get_spoiler_keywords():
     if environment == "production":
-        file_path = '/home/ubuntu/DuneBot/DuneBot/keywords.csv'
+        file_path = '/home/ubuntu/DuneBot/DuneBot/csv/keywords.csv'
     elif environment == "development":
-        file_path = 'DuneBot/keywords.csv'
+        file_path = 'DuneBot/csv/keywords.csv'
     keywords = []
 
     with open(file_path, 'r', newline='') as csvfile:
@@ -137,7 +137,7 @@ async def get_days_until_string(target_date_str):
         
 
     if days_until <= 0:
-        return(f"Dune Part Two has been released!")
+        return(f"Dune Part Two OUT NOW!")
         
     
     return(f"{days_until} days until Dune Part Two")
@@ -161,7 +161,7 @@ async def add_spoiler_keyword(interaction: discord.Interaction, keyword: str):
         await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
         return
     
-    file_path = 'DuneBot/keywords.csv'
+    file_path = 'DuneBot/csv/keywords.csv'
     with open(file_path, 'a') as csv_file:
             csv_file.write(keyword + ",\n")
     
