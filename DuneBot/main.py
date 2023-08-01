@@ -5,6 +5,7 @@ from discord.ext import tasks
 #import reddit
 #import database
 from datetime import date
+import csv
 import os
 import asyncio
 import re
@@ -50,12 +51,7 @@ async def check_spoiler(message):
         return
     
     # List of keywords to look for
-    keywords = ['Leto II', 'Miles Teg', 'Golden path', 'Ghanima',
-                ' Siona ', 'Tleilaxu', 'Ghola', 'Futar', ' Rakis ', 'Stone Burner',
-                'T-probe', 'Axolotl Tank', 'Honored Matres', 'The Scattering',
-                'Famine Times', 'Laza Tiger', 'D-wolves', 'No-ship', 'No-room',
-                'Gammu', 'Jacurutu', 'Siaynoq', 'Shuloch', 'Hayt', 'Spider Queen',
-                'Daniel and Marty', 'Lampadas']
+    keywords = await get_spoiler_keywords()
     
     if environment == "production":
         modlog_channel = bot.get_channel(701710310121275474)
@@ -91,6 +87,19 @@ async def check_spoiler(message):
 
     # Allow other event listeners (commands, etc.) to continue functioning
     await bot.process_commands(message)
+
+async def get_spoiler_keywords():
+    file_path = 'DuneBot/keywords.csv'
+    keywords = []
+
+    with open(file_path, 'r', newline='') as csvfile:
+        csv_reader = csv.reader(csvfile, skipinitialspace=False)
+
+        for row in csv_reader:
+            if row:
+                keywords.append(row[0])
+    return keywords
+
 
 def is_marked_spoiler(text, keyword):
     pattern = rf'.*\|\|.*{re.escape(keyword)}.*\|\|.*'
@@ -130,7 +139,33 @@ async def get_days_until_string(target_date_str):
     
     return(f"{days_until} days until Dune Part Two")
 
+@bot.tree.command(name="print_spoiler_keywords")
+@app_commands.describe()
+async def print_spoiler_keywords(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+
+    keywords = await get_spoiler_keywords()
+    await interaction.response.send_message("```" + str(keywords) + "```")
+
+
+@bot.tree.command(name="add_spoiler_keyword")
+@app_commands.describe(keyword="Type in a keyword you wish to be considered a spoiler.")
+async def add_spoiler_keyword(interaction: discord.Interaction, keyword: str):
+
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+    
+    file_path = 'DuneBot/keywords.csv'
+    with open(file_path, 'a') as csv_file:
+            csv_file.write(keyword + ",\n")
+    
+    await interaction.response.send_message(f"Keyword: {keyword} added.")
 '''
+
+
 
 # Set up subreddit streaming in specific channel
 @bot.tree.command(name="stream_subreddit")
