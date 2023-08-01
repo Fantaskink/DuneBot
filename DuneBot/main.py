@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord.ext import tasks
 #import reddit
 #import database
+from datetime import date
 import os
 import asyncio
 import re
@@ -26,6 +27,8 @@ async def on_ready():
 
     #database.set_all_streams_inactive()
     #verify_channels()
+
+    update_presence_task.start()
 
     print(f'{bot.user} is now running.')
     try:
@@ -92,6 +95,40 @@ async def check_spoiler(message):
 def is_marked_spoiler(text, keyword):
     pattern = rf'.*\|\|.*{re.escape(keyword)}.*\|\|.*'
     return re.match(pattern, text)
+
+async def update_presence():
+    days_until_string = await get_days_until_string("2023-11-03")
+    #game = discord.Game("with the API")
+    #await bot.change_presence(status=discord.Status.idle, activity=game)
+
+    activity = discord.Activity(type=discord.ActivityType.watching, name=days_until_string)
+    await bot.change_presence(activity=activity)
+    
+
+@tasks.loop(hours=24)
+async def update_presence_task():
+    await update_presence()
+
+async def get_days_until_string(target_date_str):
+    # Get the current date
+    today = date.today()
+
+    target_date = date.fromisoformat(target_date_str)
+
+    # Calculate the difference between the target date and the current date
+    delta = target_date - today
+
+    days_until = delta.days
+
+    if days_until == 1:
+        return(f"{days_until} day until Dune Part Two")
+        
+
+    if days_until <= 0:
+        return(f"Dune Part Two has been released!")
+        
+    
+    return(f"{days_until} days until Dune Part Two")
 
 '''
 
