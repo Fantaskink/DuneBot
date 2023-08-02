@@ -165,11 +165,47 @@ async def add_spoiler_keyword(interaction: discord.Interaction, keyword: str):
         await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
         return
     
-    file_path = 'DuneBot/csv/keywords.csv'
+    if environment == "production":
+        file_path = '/home/ubuntu/DuneBot/DuneBot/csv/keywords.csv'
+    elif environment == "development":
+        file_path = 'DuneBot/csv/keywords.csv'
+
     with open(file_path, 'a') as csv_file:
             csv_file.write(keyword + ",\n")
     
     await interaction.response.send_message(f"Keyword: {keyword} added.")
+
+@bot.tree.command(name="delete_spoiler_keyword")
+@app_commands.describe(index="Type in the index of the spoiler keyword you wish to remove.")
+async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
+
+    if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+    
+    if environment == "production":
+        file_path = '/home/ubuntu/DuneBot/DuneBot/csv/keywords.csv'
+    elif environment == "development":
+        file_path = 'DuneBot/csv/keywords.csv'
+        
+    with open(file_path, 'r', newline='') as csv_file:
+        reader = csv.reader(csv_file)
+        data = list(reader)
+
+        # Check if the row_index is valid
+    if index < 0 or index >= len(data):
+        await interaction.response.send_message("Invalid index", ephemeral=True)
+        return
+    
+    # Remove the desired row
+    data.pop(index)
+
+    # Write the modified data back to the CSV file
+    with open(csv_file, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(data)
+    
+    await interaction.response.send_message(f"Keyword removed.")
 '''
 
 
