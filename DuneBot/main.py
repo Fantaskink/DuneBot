@@ -187,7 +187,7 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
         file_path = '/home/ubuntu/DuneBot/DuneBot/csv/keywords.csv'
     elif environment == "development":
         file_path = 'DuneBot/csv/keywords.csv'
-        
+
     with open(file_path, 'r', newline='') as csv_file:
         reader = csv.reader(csv_file)
         data = list(reader)
@@ -201,7 +201,7 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
     data.pop(index)
 
     # Write the modified data back to the CSV file
-    with open(csv_file, 'w', newline='') as file:
+    with open(file_path, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(data)
     
