@@ -150,11 +150,11 @@ async def print_spoiler_keywords(interaction: discord.Interaction):
         return
 
     keywords = await get_spoiler_keywords()
-    keyword_string = []
+    keyword_string = ""
     for keyword in keywords:
-        keyword_string.append(str(keywords.index(keyword)) + ":" + keyword + "\n")
-        
-    await interaction.response.send_message("```" + str(keyword_string) + "```")
+        keyword_string = keyword_string + (str(keywords.index(keyword)) + ":" + keyword + "\n")
+
+    await interaction.response.send_message("```" + keyword_string + "```")
 
 
 @bot.tree.command(name="add_spoiler_keyword")
