@@ -2,12 +2,9 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext import tasks
-#import reddit
-#import database
 from datetime import date
 import csv
 import os
-import asyncio
 import re
 from dotenv import load_dotenv, find_dotenv
 
@@ -25,10 +22,6 @@ print("Environment:", environment)
 
 @bot.event
 async def on_ready():
-
-    #database.set_all_streams_inactive()
-    #verify_channels()
-
     update_presence_task.start()
 
     print(f'{bot.user} is now running.')
@@ -37,8 +30,6 @@ async def on_ready():
         print(f"Synced {len(synced)} commands")
     except Exception as e:
         print(e)
-
-    #loop.start()
 
 @bot.event
 async def on_message(message: discord.Message):
@@ -73,7 +64,6 @@ async def check_spoiler(message):
         modlog_channel = bot.get_channel(1131571647665672262)
         channel_ids = [1130972092570009632] #test channel
     
-
     # Check if the message is from the desired channel (replace 'CHANNEL_ID' with your channel ID)
     for id in channel_ids:
         if message.channel.id == id:
@@ -83,10 +73,10 @@ async def check_spoiler(message):
                     await message.reply(f"Please be mindful of spoilers in this channel! Surround spoilers with '||' when discussing plot points from later books.")
                     await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}, triggered by keyword: {keyword}.\nJump to message: {message.jump_url}")
                     break
-    
 
     # Allow other event listeners (commands, etc.) to continue functioning
     await bot.process_commands(message)
+
 
 async def get_spoiler_keywords():
     if environment == "production":
@@ -108,10 +98,9 @@ def is_marked_spoiler(text, keyword):
     pattern = rf'.*\|\|.*{re.escape(keyword)}.*\|\|.*'
     return re.match(pattern, text)
 
+
 async def update_presence():
     days_until_string = await get_days_until_string("2023-11-03")
-    #game = discord.Game("with the API")
-    #await bot.change_presence(status=discord.Status.idle, activity=game)
 
     activity = discord.Activity(type=discord.ActivityType.watching, name=days_until_string)
     await bot.change_presence(activity=activity)
@@ -135,10 +124,8 @@ async def get_days_until_string(target_date_str):
     if days_until == 1:
         return(f"{days_until} day until Dune Part Two")
         
-
     if days_until <= 0:
         return(f"Dune Part Two OUT NOW!")
-        
     
     return(f"{days_until} days until Dune Part Two")
 
@@ -192,7 +179,7 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
         reader = csv.reader(csv_file)
         data = list(reader)
 
-        # Check if the row_index is valid
+    # Check if the row_index is valid
     if index < 0 or index >= len(data):
         await interaction.response.send_message("Invalid index", ephemeral=True)
         return
@@ -206,9 +193,66 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
         writer.writerows(data)
     
     await interaction.response.send_message(f"Keyword removed.")
+
+@bot.tree.command(name="encyclopedia")
+@app_commands.describe(keyword="Type in the name of the entry you wish to look up.")
+async def encyclopedia(interaction: discord.Interaction, keyword: str):
+    if environment == "production":
+        file_path = '/home/ubuntu/DuneBot/DuneBot/csv/encyclopedia.csv'
+    elif environment == "development":
+        file_path = 'DuneBot/csv/encyclopedia.csv'
+
+    with open(file_path, 'r', newline='') as csvfile:
+        csv_reader = csv.reader(csvfile, skipinitialspace=False)
+
+        for row in csv_reader:
+            if row:
+                if row[0].lower() == keyword.lower():
+                    await interaction.response.send_message(row[1])
+                    return
+    await interaction.response.send_message(f"Entry not found.")
+
+
+
+# Define a simple View that gives us a confirmation menu
+class Confirm(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.value = None
+
+    # When the confirm button is pressed, set the inner value to `True` and
+    # stop the View from listening to more input.
+    # We also send the user an ephemeral message that we're confirming their choice.
+    @discord.ui.button(label='⬅️', style=discord.ButtonStyle.blurple)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message('Confirming', ephemeral=True)
+        self.value = True
+        self.stop()
+
+    # This one is similar to the confirmation button except sets the inner value to `False`
+    @discord.ui.button(label='◀️', style=discord.ButtonStyle.blurple)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message('Cancelling', ephemeral=True)
+        self.value = False
+        self.stop()
+
+
+@bot.command()
+async def ask(ctx: commands.Context):
+    """Asks the user a question to confirm something."""
+    # We create the view and assign it to a variable so we can wait for it later.
+    view = Confirm()
+    await ctx.send('Do you want to continue?', view=view)
+    # Wait for the View to stop listening for input...
+    await view.wait()
+    if view.value is None:
+        print('Timed out...')
+    elif view.value:
+        print('Confirmed...')
+    else:
+        print('Cancelled...')
+
 '''
-
-
 
 # Set up subreddit streaming in specific channel
 @bot.tree.command(name="stream_subreddit")
@@ -252,8 +296,6 @@ async def stop_subreddit_stream_channel(interaction: discord.Interaction):
             await interaction.response.send_message("Subreddit stream stopped")
         else:
             await interaction.response.send_message("No subreddit stream active in channel")
-
-
 
 
 @tasks.loop(seconds=10)  # repeat after every 10 seconds
