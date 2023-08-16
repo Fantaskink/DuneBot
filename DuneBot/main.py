@@ -205,8 +205,13 @@ async def meme(interatction: discord.Interaction, top_text: str, bottom_text: st
     response = requests.get(image_link)
     img = Image.open(BytesIO(response.content))
 
+    if environment == "production":
+        file_path = '/home/ubuntu/DuneBot/DuneBot/imact.ttf'
+    elif environment == "development":
+        file_path = 'DuneBot/impact.tff'
+
     # Load Impact font
-    font = ImageFont.truetype("DuneBot/impact.ttf", 40)  # Make sure you have the "impact.ttf" file in the same directory
+    font = ImageFont.truetype(file_path, 40)  # Make sure you have the "impact.ttf" file in the same directory
 
     # Initialize the drawing context
     draw = ImageDraw.Draw(img)
