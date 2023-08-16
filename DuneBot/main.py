@@ -206,7 +206,7 @@ async def meme(interatction: discord.Interaction, top_text: str, bottom_text: st
     img = Image.open(BytesIO(response.content))
 
     if environment == "production":
-        file_path = '/home/ubuntu/DuneBot/DuneBot/imact.ttf'
+        file_path = '/home/ubuntu/DuneBot/DuneBot/impact.ttf'
     elif environment == "development":
         file_path = 'DuneBot/impact.tff'
 
