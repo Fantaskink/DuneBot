@@ -194,6 +194,48 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
     
     await interaction.response.send_message(f"Keyword removed.")
 
+@bot.tree.command(name="meme")
+@app_commands.describe(top_text="Top text", bottom_text="Bottom text", image_link="Image link")
+async def meme(interatction: discord.Interaction, top_text: str, bottom_text: str, image_link: str):
+    from PIL import Image, ImageDraw, ImageFont
+    import requests
+    from io import BytesIO
+    
+    # Load the image from the link
+    response = requests.get(image_link)
+    img = Image.open(BytesIO(response.content))
+
+    # Load Impact font
+    font = ImageFont.truetype("DuneBot/impact.ttf", 40)  # Make sure you have the "impact.ttf" file in the same directory
+
+    # Initialize the drawing context
+    draw = ImageDraw.Draw(img)
+
+    # Calculate text bounding boxes
+    top_text_bbox = draw.textbbox((0, 0), top_text, font=font)
+    bottom_text_bbox = draw.textbbox((0, 0), bottom_text, font=font)
+
+    # Calculate text positions
+    width, height = img.size
+    top_text_position = ((width - top_text_bbox[2]) / 2, 10)
+    bottom_text_position = ((width - bottom_text_bbox[2]) / 2, height - bottom_text_bbox[3] - 10)
+
+    # Draw top and bottom text on the image
+    draw.text(top_text_position, top_text, fill="white", font=font)
+    draw.text(bottom_text_position, bottom_text, fill="white", font=font)
+
+    # Save the modified image to a BytesIO object
+    modified_img_io = BytesIO()
+    img.save(modified_img_io, format="PNG")
+    modified_img_io.seek(0)
+
+    # Create a Discord File object
+    modified_img_file = discord.File(modified_img_io, filename="meme.png")
+
+    await interatction.response.send_message(file=modified_img_file)
+
+
+
 @bot.tree.command(name="encyclopedia")
 @app_commands.describe(keyword="Type in the name of the entry you wish to look up.")
 async def encyclopedia(interaction: discord.Interaction, keyword: str):
@@ -202,55 +244,56 @@ async def encyclopedia(interaction: discord.Interaction, keyword: str):
     elif environment == "development":
         file_path = 'DuneBot/csv/encyclopedia.csv'
 
+
     with open(file_path, 'r', newline='') as csvfile:
         csv_reader = csv.reader(csvfile, skipinitialspace=False)
 
         for row in csv_reader:
             if row:
                 if row[0].lower() == keyword.lower():
-                    await interaction.response.send_message(row[1])
-                    return
-    await interaction.response.send_message(f"Entry not found.")
+                    page_count = len(row) - 1
+                    view = Pages(page_count)
+                    await interaction.response.send_message(row[1], view=view)
+                    await view.wait()
+                    if view.index is None:
+                        await interaction.response.edit_message(view=view)
+                    elif view.index:
+                        print("index" + str(view.index))
+                        await interaction.response.edit_message(view=view)
+                    else:
+                        print('Cancelled...')
 
+    await interaction.response.send_message(f"Entry not found.", ephemeral=True)
 
 
 # Define a simple View that gives us a confirmation menu
-class Confirm(discord.ui.View):
-    def __init__(self):
+class Pages(discord.ui.View):
+    def __init__(self, page_count: int):
         super().__init__()
-        self.value = None
-
-    # When the confirm button is pressed, set the inner value to `True` and
-    # stop the View from listening to more input.
-    # We also send the user an ephemeral message that we're confirming their choice.
-    @discord.ui.button(label='⬅️', style=discord.ButtonStyle.blurple)
-    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.index = 0
+        self.page_count = page_count
+    
+    @discord.ui.button(label='Previous page', style=discord.ButtonStyle.primary)
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button, ):
         await interaction.response.send_message('Confirming', ephemeral=True)
-        self.value = True
-        self.stop()
+        self.index = max(0, self.index - 1)
+        print(self.index)
+        await self.update_buttons()
 
-    # This one is similar to the confirmation button except sets the inner value to `False`
-    @discord.ui.button(label='◀️', style=discord.ButtonStyle.blurple)
-    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+    
+    @discord.ui.button(label='Next page', style=discord.ButtonStyle.primary)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message('Cancelling', ephemeral=True)
-        self.value = False
-        self.stop()
-
-
-@bot.command()
-async def ask(ctx: commands.Context):
-    """Asks the user a question to confirm something."""
-    # We create the view and assign it to a variable so we can wait for it later.
-    view = Confirm()
-    await ctx.send('Do you want to continue?', view=view)
-    # Wait for the View to stop listening for input...
-    await view.wait()
-    if view.value is None:
-        print('Timed out...')
-    elif view.value:
-        print('Confirmed...')
-    else:
-        print('Cancelled...')
+        self.index = min(self.page_count, self.index + 1)
+        print(self.index)
+        print("page count" + str(self.page_count))
+        await self.update_buttons()
+    
+    async def update_buttons(self):
+        print("update buttons")
+        self.children[0].disabled = (self.index == 0)
+        self.children[1].disabled = (self.index == self.page_count)
+    
 
 '''
 
