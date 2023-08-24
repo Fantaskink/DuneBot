@@ -100,9 +100,9 @@ def is_marked_spoiler(text, keyword):
 
 
 async def update_presence():
-    #days_until_string = await get_days_until_string("2023-11-03")
+    days_until_string = await get_days_until_string("2024-03-15")
 
-    days_until_string = "ITS FUCKING DELAYED"
+    #days_until_string = "ITS FUCKING DELAYED"
 
     activity = discord.Activity(type=discord.ActivityType.watching, name=days_until_string)
     await bot.change_presence(activity=activity)
