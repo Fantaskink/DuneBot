@@ -100,7 +100,7 @@ def is_marked_spoiler(text, keyword):
 
 
 async def update_presence():
-    days_until_string = await get_days_until_string("2024-03-15")
+    days_until_string = await get_days_until_string("2024-03-15", "00:00")
 
     #days_until_string = "ITS FUCKING DELAYED"
 
