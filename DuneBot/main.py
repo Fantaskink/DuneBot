@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext import tasks
-from datetime import date
+from datetime import date, datetime
 import csv
 import os
 import re
@@ -112,14 +112,19 @@ async def update_presence():
 async def update_presence_task():
     await update_presence()
 
-async def get_days_until_string(target_date_str):
+async def get_days_until_string(target_date_str,  time_str):
     # Get the current date
-    today = date.today()
+    today = datetime.now()
 
+    # Parse the target date and time from the input strings
     target_date = date.fromisoformat(target_date_str)
+    target_time = datetime.strptime(time_str, "%H:%M")
 
-    # Calculate the difference between the target date and the current date
-    delta = target_date - today
+    # Combine the target date and time into a single datetime object
+    target_datetime = datetime.combine(target_date, target_time)
+
+    # Calculate the time difference between the target datetime and the current datetime
+    delta = target_datetime - today
 
     days_until = delta.days
 
