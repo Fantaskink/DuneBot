@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext import tasks
-from datetime import date, datetime
+from datetime import date, datetime, time
 import csv
 import os
 import re
@@ -118,10 +118,11 @@ async def get_days_until_string(target_date_str,  time_str):
 
     # Parse the target date and time from the input strings
     target_date = date.fromisoformat(target_date_str)
-    target_time = datetime.strptime(time_str, "%H:%M")
+    target_time = time.fromisoformat(time_str)
 
     # Combine the target date and time into a single datetime object
     target_datetime = datetime.combine(target_date, target_time)
+
 
     # Calculate the time difference between the target datetime and the current datetime
     delta = target_datetime - today
