@@ -112,7 +112,7 @@ async def update_presence():
 async def update_presence_task():
     await update_presence()
 
-async def get_days_until_string(target_date_str,  time_str):
+async def get_days_until_string(target_date_str, time_str):
     # Get the current date
     today = datetime.now()
 
@@ -122,7 +122,6 @@ async def get_days_until_string(target_date_str,  time_str):
 
     # Combine the target date and time into a single datetime object
     target_datetime = datetime.combine(target_date, target_time)
-
 
     # Calculate the time difference between the target datetime and the current datetime
     delta = target_datetime - today
@@ -306,6 +305,13 @@ class Pages(discord.ui.View):
         print("update buttons")
         self.children[0].disabled = (self.index == 0)
         self.children[1].disabled = (self.index == self.page_count)
+
+# Command that fetches the profile picture of a user and sends it as a message
+@bot.tree.command(name="pfp")
+@app_commands.describe(user="Type in the name of the user whose profile picture you wish to see.")
+async def pfp(interaction: discord.Interaction, user: discord.User):
+    await interaction.response.send_message(user.avatar.url)
+    
     
 
 '''
