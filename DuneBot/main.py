@@ -38,21 +38,25 @@ async def on_message(message: discord.Message):
 
 
 async def check_sietch_tabr_spoiler(message):
+    print("Test")
     # Ignore messages from the bot itself to prevent potential loops
     if message.author == bot.user:
         return
     
     if environment == "production":
         modlog_channel = bot.get_channel(701710310121275474)
-        channel_id = 902671902013784127
+        channel_id = 902671902013784127 # Sietch tabr
     elif environment == "development":
         modlog_channel = bot.get_channel(1131571647665672262)
         channel_id = 1130972092570009632 #test channel
 
     
+    marked_as_spoiler = message.content.count("||") == 2
+
+    
     if message.channel.id == channel_id:
-        if "||" in message.content:
-            await message.reply(f"Spoilers do not need to be marked in this channel.")
+        if marked_as_spoiler:
+            await message.reply(f"Remember: Spoilers do not need to be marked in this channel.")
             #await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}.\nJump to message: {message.jump_url}")
 
     
