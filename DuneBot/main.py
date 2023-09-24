@@ -311,6 +311,18 @@ class Pages(discord.ui.View):
 @app_commands.describe(user="Type in the name of the user whose profile picture you wish to see.")
 async def pfp(interaction: discord.Interaction, user: discord.User):
     await interaction.response.send_message(user.avatar.url)
+
+
+# Command that takes a message as an argument and makes the bot say it
+@bot.tree.command(name="say")
+@app_commands.describe(message="Type in the message you wish the bot to say.")
+async def say(interaction: discord.Interaction, message: str):
+    if not interaction.user.guild_permissions.ban_members:
+        return
+    
+    await interaction.response.send_message("Alright boss", ephemeral=True)
+    channel = interaction.channel
+    await channel.send(message)
     
     
 
