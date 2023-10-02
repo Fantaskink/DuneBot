@@ -324,8 +324,8 @@ async def say(interaction: discord.Interaction, message: str, message_id: str = 
 
     if message_id is not None:
         channel = interaction.channel
-        message = await channel.fetch_message(message_id)
-        await message.reply(message)
+        reply_message = await channel.fetch_message(message_id)
+        await reply_message.reply(message)
     else:
         channel = interaction.channel
         await channel.send(message)
