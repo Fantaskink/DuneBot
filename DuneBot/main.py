@@ -316,7 +316,7 @@ async def pfp(interaction: discord.Interaction, user: discord.User):
 # Command that takes a message as an argument and makes the bot say it. Optional message link argument to make the bot reply to any message
 @bot.tree.command(name="say")
 @app_commands.describe(message="Type in the message you wish the bot to say.", message_id="Type in the id of the message you wish the bot to reply to.")
-async def say(interaction: discord.Interaction, message: str, message_id: int = None):
+async def say(interaction: discord.Interaction, message: str, message_id: str = None):
     if not interaction.user.guild_permissions.ban_members:
         return
     
