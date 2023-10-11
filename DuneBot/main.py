@@ -104,7 +104,7 @@ async def update_presence():
 
     #days_until_string = "ITS FUCKING DELAYED"
 
-    activity = discord.Activity(type=discord.ActivityType.watching, name=days_until_string)
+    activity = discord.CustomActivity(name=days_until_string)
     await bot.change_presence(activity=activity)
     
 
