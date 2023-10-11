@@ -208,7 +208,7 @@ async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str
     import requests
     from io import BytesIO
 
-    interaction.defer()
+    await interaction.response.defer(ephemeral=True)
     
     # Load the image from the link
     response = requests.get(image_link)
