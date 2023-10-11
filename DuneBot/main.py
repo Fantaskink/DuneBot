@@ -203,10 +203,12 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
 
 @bot.tree.command(name="meme")
 @app_commands.describe(top_text="Top text", bottom_text="Bottom text", image_link="Image link")
-async def meme(interatction: discord.Interaction, top_text: str, bottom_text: str, image_link: str):
+async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str, image_link: str):
     from PIL import Image, ImageDraw, ImageFont
     import requests
     from io import BytesIO
+
+    interaction.defer()
     
     # Load the image from the link
     response = requests.get(image_link)
@@ -244,7 +246,7 @@ async def meme(interatction: discord.Interaction, top_text: str, bottom_text: st
     # Create a Discord File object
     modified_img_file = discord.File(modified_img_io, filename="meme.png")
 
-    await interatction.response.send_message(file=modified_img_file)
+    await interaction.followup.send(file=modified_img_file)
 
 
 
