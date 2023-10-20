@@ -64,7 +64,7 @@ async def check_spoiler(message):
         modlog_channel = bot.get_channel(1131571647665672262)
         channel_ids = [1130972092570009632] #test channel
     
-    # Check if the message is from the desired channel (replace 'CHANNEL_ID' with your channel ID)
+    # Check if the message is from the desired channel
     for id in channel_ids:
         if message.channel.id == id:
             # Process the message for keywords
@@ -331,9 +331,6 @@ async def say(interaction: discord.Interaction, message: str, message_id: str = 
     else:
         channel = interaction.channel
         await channel.send(message)
-    
-    
-
 '''
 
 # Set up subreddit streaming in specific channel
