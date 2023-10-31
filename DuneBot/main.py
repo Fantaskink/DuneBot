@@ -71,7 +71,7 @@ async def check_spoiler(message):
             for keyword in keywords:
                 if keyword.lower() in message.content.lower() and not is_marked_spoiler(message.content.lower(), keyword.lower()):
                     await message.reply(f"Please be mindful of spoilers in this channel! Surround spoilers with '||' when discussing plot points from later books.")
-                    await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}, triggered by keyword: {keyword}.\n ´´´ {message.content} ´´´ \n Jump to message: {message.jump_url}")
+                    await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}, triggered by keyword: {keyword}.\n ```{message.content}``` \n Jump to message: {message.jump_url}")
                     break
 
     # Allow other event listeners (commands, etc.) to continue functioning
