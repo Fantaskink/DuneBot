@@ -412,16 +412,17 @@ async def guess(interaction: discord.Interaction, guess: str):
         return
     
     discarded_letters = game.get_discarded_letters()
+    discarded_letters_list = list(discarded_letters)  # Convert the set to a list
     discarded_letters_string = ""
 
-    last_item = discarded_letters[-1]
-    for element in discarded_letters:
+    last_item = discarded_letters_list[-1]
+    for element in discarded_letters_list:
         if element == last_item:
             discarded_letters_string += element
         else:
             discarded_letters_string += element + ", "
 
-    await interaction.channel.send("Discarded letters: "+  discarded_letters_string)
+    await interaction.channel.send("Discarded letters: " +  discarded_letters_string)
     
     game.subtract_guess()
 
