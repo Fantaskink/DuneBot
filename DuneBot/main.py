@@ -457,7 +457,8 @@ async def check_guess(guess, game: wordle_game):
             letters.remove(guess[i])
         else:
             output[i] = "⬜"
-            game.update_discarded_letters(guess[i])
+            if guess[i] not in solution:
+                game.update_discarded_letters(guess[i])
 
     output_string = ""
     for letter in output:
