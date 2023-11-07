@@ -25,14 +25,14 @@ def get_random_solution(dune_mode):
 
 class wordle_game:
     def __init__(self, user_id:discord.User.id, dune_mode:bool = False):
-        self.user = user_id
+        self.user_id = user_id
         self.dune_mode = dune_mode
         self.word = get_random_solution(dune_mode)
         self.guesses_left = 6
         self.discarded_letters = set()
     
-    def get_user(self):
-        return self.user
+    def get_user_id(self):
+        return self.user_id
     
     def get_word(self):
         return self.word
