@@ -1,4 +1,3 @@
-import discord
 import os
 import random
 
@@ -24,7 +23,7 @@ def get_random_solution(dune_mode):
     
 
 class wordle_game:
-    def __init__(self, user_id:discord.User.id, dune_mode:bool = False):
+    def __init__(self, user_id, dune_mode):
         self.user_id = user_id
         self.dune_mode = dune_mode
         self.word = get_random_solution(dune_mode)

@@ -379,7 +379,7 @@ async def wordle(interaction: discord.Interaction, dune_mode: bool):
 @bot.tree.command(name="guess")
 @app_commands.describe(guess="Type in the word you wish to guess.")
 async def guess(interaction: discord.Interaction, guess: str):
-    guess = guess.lower()
+    guess = guess.lower().strip()
     game = await get_wordle_game(interaction.user.id)
 
     if game is None:
