@@ -400,7 +400,7 @@ async def guess(interaction: discord.Interaction, guess: str):
     
     result_string = await check_guess(guess, game)
 
-    await interaction.channel.send("You guessed: " + guess)
+    await interaction.channel.send(interaction.user + " guessed: " + guess)
 
     await interaction.channel.send(result_string)
 
