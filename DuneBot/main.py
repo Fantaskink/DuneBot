@@ -421,7 +421,7 @@ async def guess(interaction: discord.Interaction, guess: str):
         else:
             discarded_letters_string += element + ", "
 
-    await interaction.channel.send(f"Discarded letters: {str(discarded_letters)}")
+    await interaction.channel.send("Discarded letters: "+  discarded_letters_string)
     
     game.subtract_guess()
 
