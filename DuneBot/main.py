@@ -406,7 +406,7 @@ async def guess(interaction: discord.Interaction, guess: str):
 
     if result_string == "🟩" * game.get_word_length():
         await interaction.response.send_message("You win!")
-        await end_wordle_game(game)
+        await end_wordle_game(interaction.user)
         return
     
     discarded_letters = game.get_discarded_letters()
@@ -418,7 +418,7 @@ async def guess(interaction: discord.Interaction, guess: str):
 
     if game.get_guesses_left() == 0:
         await interaction.channel.send("You lose!")
-        await end_wordle_game(game)
+        await end_wordle_game(interaction.user)
     
     await interaction.response.send_message("Guess again with /guess", ephemeral=True)
     return
