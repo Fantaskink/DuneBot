@@ -16,7 +16,6 @@ def get_random_solution(dune_mode):
             dune_solutions = f.read().splitlines()
             return random.choice(dune_solutions)
     else:
-        print(base_path + 'wordle/valid_solutions.csv')
         with open(base_path + 'wordle/valid_solutions.csv', 'r') as f:
             valid_solutions = f.read().splitlines()
             return random.choice(valid_solutions)

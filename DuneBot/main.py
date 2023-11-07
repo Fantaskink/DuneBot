@@ -379,33 +379,35 @@ async def wordle(interaction: discord.Interaction, dune_mode: bool):
 @bot.tree.command(name="guess")
 @app_commands.describe(guess="Type in the word you wish to guess.")
 async def guess(interaction: discord.Interaction, guess: str):
+    await interaction.response.defer(ephemeral=True)
+
     guess = guess.lower().strip()
     game = await get_wordle_game(interaction.user.id)
 
     if game is None:
-        await interaction.response.send_message("You do not have a wordle game in progress", ephemeral=True)
+        await interaction.followup.send("You do not have a wordle game in progress")
         return
     
     if len(guess) != game.get_word_length():
         length = game.get_word_length()
-        await interaction.response.send_message(f"Guess must be {length} letters long", ephemeral=True)
+        await interaction.followup.send(f"Guess must be {length} letters long")
         return
     
     if not game.is_dune_mode():
         valid_guesses = await get_valid_guesses()
         solutions = await get_all_solutions()
         if guess not in valid_guesses and guess not in solutions:
-            await interaction.response.send_message("Not a word", ephemeral=True)
+            await interaction.followup.send("Not a word")
             return
     
     result_string = await check_guess(guess, game)
 
-    await interaction.channel.send(interaction.user + " guessed: " + guess)
+    await interaction.channel.send(interaction.user.display_name + " guessed: " + guess)
 
     await interaction.channel.send(result_string)
 
     if result_string == "🟩" * game.get_word_length():
-        await interaction.response.send_message("You win!")
+        await interaction.followup.send("You win!")
         await end_wordle_game(interaction.user.id)
         return
     
@@ -418,9 +420,12 @@ async def guess(interaction: discord.Interaction, guess: str):
 
     if game.get_guesses_left() == 0:
         await interaction.channel.send("You lose!")
+        await interaction.channel.send("The word was: " + game.get_word())
         await end_wordle_game(interaction.user.id)
+        await interaction.followup.send("Play again with /wordle")
+        return
     
-    await interaction.response.send_message("Guess again with /guess", ephemeral=True)
+    await interaction.followup.send("Guess again with /guess")
     return
 
 
@@ -431,7 +436,7 @@ async def check_guess(guess, game: wordle_game):
     letters = []
     
     for i in range(0, solution_length):
-        letters.append(guess[i])
+        letters.append(solution[i])
 
     for i in range(0, solution_length):
         if guess[i] in solution and guess[i] in letters and guess[i] != solution[i]:
