@@ -7,6 +7,7 @@ import csv
 import os
 import re
 from dotenv import load_dotenv, find_dotenv
+from wordlegame import wordle_game
 
 load_dotenv(find_dotenv())
 
@@ -19,6 +20,14 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 environment = os.environ.get("ENVIRONMENT")
 print("Environment:", environment)
 
+wordle_games = []
+
+base_path = ""
+
+if environment == "production":
+    base_path = '/home/ubuntu/DuneBot/DuneBot/'
+elif environment == "development":
+    base_path = 'DuneBot/'
 
 @bot.event
 async def on_ready():
@@ -79,10 +88,7 @@ async def check_spoiler(message):
 
 
 async def get_spoiler_keywords():
-    if environment == "production":
-        file_path = '/home/ubuntu/DuneBot/DuneBot/csv/keywords.csv'
-    elif environment == "development":
-        file_path = 'DuneBot/csv/keywords.csv'
+    file_path = base_path + 'csv/keywords.csv'
     keywords = []
 
     with open(file_path, 'r', newline='') as csvfile:
@@ -159,10 +165,7 @@ async def add_spoiler_keyword(interaction: discord.Interaction, keyword: str):
         await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
         return
     
-    if environment == "production":
-        file_path = '/home/ubuntu/DuneBot/DuneBot/csv/keywords.csv'
-    elif environment == "development":
-        file_path = 'DuneBot/csv/keywords.csv'
+    file_path = base_path + 'csv/keywords.csv'
 
     with open(file_path, 'a') as csv_file:
             csv_file.write(keyword + ",\n")
@@ -176,11 +179,8 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
     if not interaction.user.guild_permissions.ban_members:
         await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
         return
-    
-    if environment == "production":
-        file_path = '/home/ubuntu/DuneBot/DuneBot/csv/keywords.csv'
-    elif environment == "development":
-        file_path = 'DuneBot/csv/keywords.csv'
+
+    file_path = base_path + 'csv/keywords.csv'
 
     with open(file_path, 'r', newline='') as csv_file:
         reader = csv.reader(csv_file)
@@ -214,10 +214,7 @@ async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str
     response = requests.get(image_link)
     img = Image.open(BytesIO(response.content))
 
-    if environment == "production":
-        file_path = '/home/ubuntu/DuneBot/DuneBot/impact.ttf'
-    elif environment == "development":
-        file_path = 'DuneBot/impact.tff'
+    file_path = base_path + 'impact.tff'
 
     # Load Impact font
     font = ImageFont.truetype(file_path, 40)  # Make sure you have the "impact.ttf" file in the same directory
@@ -253,11 +250,7 @@ async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str
 @bot.tree.command(name="encyclopedia")
 @app_commands.describe(keyword="Type in the name of the entry you wish to look up.")
 async def encyclopedia(interaction: discord.Interaction, keyword: str):
-    if environment == "production":
-        file_path = '/home/ubuntu/DuneBot/DuneBot/csv/encyclopedia.csv'
-    elif environment == "development":
-        file_path = 'DuneBot/csv/encyclopedia.csv'
-
+    file_path = base_path + 'csv/encyclopedia.csv'
 
     with open(file_path, 'r', newline='') as csvfile:
         csv_reader = csv.reader(csvfile, skipinitialspace=False)
@@ -331,6 +324,135 @@ async def say(interaction: discord.Interaction, message: str, message_id: str = 
     else:
         channel = interaction.channel
         await channel.send(message)
+
+
+async def get_wordle_games():
+    global wordle_games
+    return wordle_games
+
+
+async def get_wordle_game(user):
+    global wordle_games
+    for wordle_game in wordle_games:
+        if wordle_game.get_user() == user:
+            return wordle_game
+    return None
+
+
+async def add_wordle_game(wordle_game):
+    global wordle_games
+    wordle_games.append(wordle_game)
+
+
+async def remove_wordle_game(wordle_game):
+    global wordle_games
+    wordle_games.remove(wordle_game)
+
+
+async def get_valid_guesses():
+    file_path = base_path + 'wordle/valid_guesses.csv'
+    with open(file_path, 'r') as f:
+        valid_guesses = f.read().splitlines()
+        return valid_guesses
+
+async def get_all_solutions():
+    file_path = base_path + 'wordle/valid_solutions.csv'
+    with open(file_path, 'r') as f:
+        valid_solutions = f.read().splitlines()
+        return valid_solutions
+
+
+@bot.tree.command(name="wordle")
+@app_commands.describe(dune_mode="Choose yes to play wordle with terms and names from Dune. Choose no to play with standard words.")
+async def wordle(interaction: discord.Interaction, dune_mode: bool):
+    game_in_progress = await get_wordle_game(interaction.user)
+
+    if game_in_progress is None:
+        new_game = wordle_game(interaction.user, dune_mode)
+        await add_wordle_game(new_game)
+        length = new_game.get_word_length()
+        await interaction.response.send_message(f"Wordle game started. \n Guess a {length} letter word with /guess", ephemeral=True)
+    else:
+        await interaction.response.send_message("You already have a wordle game in progress", ephemeral=True)
+
+
+@bot.tree.command(name="guess")
+@app_commands.describe(guess="Type in the word you wish to guess.")
+async def guess(interaction: discord.Interaction, guess: str):
+    guess = guess.lower()
+    game = await get_wordle_game(interaction.user)
+
+    if game is None:
+        await interaction.response.send_message("You do not have a wordle game in progress", ephemeral=True)
+        return
+    
+    if len(guess) != game.get_word_length():
+        length = game.get_word_length()
+        await interaction.response.send_message(f"Guess must be {length} letters long", ephemeral=True)
+        return
+    
+    if not game.is_dune_mode():
+        valid_guesses = await get_valid_guesses()
+        solutions = await get_all_solutions()
+        if guess not in valid_guesses and guess not in solutions:
+            await interaction.response.send_message("Not a word", ephemeral=True)
+            return
+    
+    result_string = await check_guess(guess, game)
+
+    await interaction.channel.send("You guessed: " + guess)
+
+    await interaction.channel.send(result_string)
+
+    if result_string == "🟩" * game.get_word_length():
+        await interaction.response.send_message("You win!")
+        await remove_wordle_game(game)
+        return
+    
+    discarded_letters = game.get_discarded_letters()
+    await interaction.channel.send(f"Discarded letters: {str(discarded_letters)}")
+    
+    game.subtract_guess()
+
+    await interaction.channel.send("Guesses left: " + str(game.get_guesses_left()))
+
+    if game.get_guesses_left() == 0:
+        await interaction.channel.send("You lose!")
+        await remove_wordle_game(game)
+    
+    await interaction.response.send_message("Guess again with /guess", ephemeral=True)
+    return
+
+
+async def check_guess(guess, game: wordle_game):
+    solution = game.get_word()
+    solution_length = game.get_word_length()
+    output = ["_" for _ in range(solution_length)]
+    letters = []
+    
+    for i in range(0, solution_length):
+        letters.append(guess[i])
+
+    for i in range(0, solution_length):
+        if guess[i] in solution and guess[i] in letters and guess[i] != solution[i]:
+            output[i] = "🟨"
+            letters.remove(guess[i])
+        elif guess[i] == solution[i]:
+            output[i] = "🟩"
+            letters.remove(guess[i])
+        else:
+            output[i] = "⬜"
+            game.update_discarded_letters(guess[i])
+
+    output_string = ""
+    for letter in output:
+        output_string += letter
+
+    return output_string
+
+async def end_wordle_game(user: discord.User):
+    wordle_game = await get_wordle_game(user)
+    await remove_wordle_game(wordle_game)
 '''
 
 # Set up subreddit streaming in specific channel
