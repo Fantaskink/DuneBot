@@ -331,10 +331,10 @@ async def get_wordle_games():
     return wordle_games
 
 
-async def get_wordle_game(user):
+async def get_wordle_game(user_id):
     global wordle_games
     for wordle_game in wordle_games:
-        if wordle_game.get_user() == user:
+        if wordle_game.get_user_id() == user_id:
             return wordle_game
     return None
 
@@ -368,7 +368,7 @@ async def wordle(interaction: discord.Interaction, dune_mode: bool):
     game_in_progress = await get_wordle_game(interaction.user)
 
     if game_in_progress is None:
-        new_game = wordle_game(interaction.user, dune_mode)
+        new_game = wordle_game(interaction.user.id, dune_mode)
         await add_wordle_game(new_game)
         length = new_game.get_word_length()
         await interaction.response.send_message(f"Wordle game started. \n Guess a {length} letter word with /guess", ephemeral=True)
@@ -380,7 +380,7 @@ async def wordle(interaction: discord.Interaction, dune_mode: bool):
 @app_commands.describe(guess="Type in the word you wish to guess.")
 async def guess(interaction: discord.Interaction, guess: str):
     guess = guess.lower()
-    game = await get_wordle_game(interaction.user)
+    game = await get_wordle_game(interaction.user.id)
 
     if game is None:
         await interaction.response.send_message("You do not have a wordle game in progress", ephemeral=True)
