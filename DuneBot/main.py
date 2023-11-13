@@ -355,6 +355,7 @@ async def get_valid_guesses():
         valid_guesses = f.read().splitlines()
         return valid_guesses
 
+
 async def get_all_solutions():
     file_path = base_path + 'wordle/valid_solutions.csv'
     with open(file_path, 'r') as f:
@@ -365,6 +366,16 @@ async def get_all_solutions():
 @bot.tree.command(name="wordle")
 @app_commands.describe(dune_mode="Choose yes to play wordle with terms and names from Dune. Choose no to play with standard words.")
 async def wordle(interaction: discord.Interaction, dune_mode: bool):
+
+    # Prevent command from being run twice when testing bot
+    if environment == "production" and interaction.guild_id != 701674250591010837:
+        print("wrong server")
+        return
+    
+    if environment == "development" and interaction.guild_id != 1064479981012533300:
+        print("wrong server")
+        return
+
     game_in_progress = await get_wordle_game(interaction.user.id)
 
     if game_in_progress is None:
@@ -469,6 +480,95 @@ async def check_guess(guess, game: wordle_game):
 async def end_wordle_game(user_id: discord.User.id):
     wordle_game = await get_wordle_game(user_id)
     await remove_wordle_game(wordle_game)
+    
+
+def player_in_stats(user_id):
+    with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+
+        for row in csv_reader:
+            if row[0] == user_id:
+                return True
+
+        return False
+    
+
+def player_win_game(user_id):
+    # If player is not in stats.csv, add them
+    if not player_in_stats(user_id):
+        add_player_to_stats(user_id)
+    
+    # Update stats.csv and add 1 to second column
+    with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+        lines = list(csv_reader)
+        for i in range(len(lines)):
+            if lines[i][0] == user_id:
+                lines[i][1] = int(lines[i][1]) + 1
+    
+    # Write to stats.csv
+    with open(base_path + 'wordle/player_stats.csv', 'w') as stats_file:
+        csv_writer = csv.writer(stats_file)
+        csv_writer.writerows(lines)
+
+
+def player_lose_game(user_id):
+    # If player is not in stats.csv, add them
+    if not player_in_stats(user_id):
+        add_player_to_stats(user_id)
+    
+    # Update stats.csv and add 1 to third column
+    with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+        lines = list(csv_reader)
+        for i in range(len(lines)):
+            if lines[i][0] == user_id:
+                lines[i][2] = int(lines[i][2]) + 1
+    
+    # Write to stats.csv
+    with open(base_path + 'wordle/player_stats.csv', 'w') as stats_file:
+        csv_writer = csv.writer(stats_file)
+        csv_writer.writerows(lines)
+
+
+def add_player_to_stats(user_id):
+    with open(base_path + 'wordle/player_stats.csv', 'a') as stats_file:
+        csv_writer = csv.writer(stats_file)
+        csv_writer.writerow([user_id, 0, 0])
+
+
+def get_wins(user_id):
+    with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+
+        for row in csv_reader:
+            if row[0] == user_id:
+                return row[1]
+
+
+def get_losses(user_id):
+    with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+
+        for row in csv_reader:
+            if row[0] == user_id:
+                return row[2]
+
+
+@bot.tree.command(name="wordle_player_stats")
+@app_commands.describe(player="Type in the name of the player whose stats you wish to see.")
+async def wordle_player_stats(interaction: discord.Interaction, player: discord.User):
+    if player_in_stats(player.id):
+        wins = get_wins(player.id)
+        losses = get_losses(player.id)
+        await interaction.response.send_message(f"{player.display_name} has {wins} wins and {losses} losses")
+    else:
+        await interaction.response.send_message(f"{player.display_name} has not played any wordle games")
+
+
+
+
+
 '''
 
 # Set up subreddit streaming in specific channel
