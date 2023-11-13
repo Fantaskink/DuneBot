@@ -474,7 +474,7 @@ async def end_wordle_game(user_id: discord.User.id):
     await remove_wordle_game(wordle_game)
     
 
-def player_in_stats(user_id):
+async def player_in_stats(user_id):
     with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
         csv_reader = csv.reader(stats_file)
 
@@ -487,7 +487,7 @@ def player_in_stats(user_id):
 
 async def player_win_game(user_id):
     # If player is not in stats.csv, add them
-    if not player_in_stats(user_id):
+    if not await player_in_stats(str(user_id)):
         await add_player_to_stats(user_id)
     
     # Update stats.csv and add 1 to second column
@@ -506,7 +506,7 @@ async def player_win_game(user_id):
 
 async def player_lose_game(user_id):
     # If player is not in stats.csv, add them
-    if not player_in_stats(user_id):
+    if not player_in_stats(str(user_id)):
         await add_player_to_stats(user_id)
     
     # Update stats.csv and add 1 to third column
@@ -550,7 +550,7 @@ async def get_losses(user_id):
 @bot.tree.command(name="wordle_player_stats")
 @app_commands.describe(player="Type in the name of the player whose stats you wish to see.")
 async def wordle_player_stats(interaction: discord.Interaction, player: discord.User):
-    if player_in_stats(player.id):
+    if await player_in_stats(str(player.id)):
         wins = await get_wins(player.id)
         losses = await get_losses(player.id)
         await interaction.response.send_message(f"{player.display_name} has {wins} wins and {losses} losses")
