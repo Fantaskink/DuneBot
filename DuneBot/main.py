@@ -366,16 +366,6 @@ async def get_all_solutions():
 @bot.tree.command(name="wordle")
 @app_commands.describe(dune_mode="Choose yes to play wordle with terms and names from Dune. Choose no to play with standard words.")
 async def wordle(interaction: discord.Interaction, dune_mode: bool):
-
-    # Prevent command from being run twice when testing bot
-    if environment == "production" and interaction.guild_id != 701674250591010837:
-        print("wrong server")
-        return
-    
-    if environment == "development" and interaction.guild_id != 1064479981012533300:
-        print("wrong server")
-        return
-
     game_in_progress = await get_wordle_game(interaction.user.id)
 
     if game_in_progress is None:
