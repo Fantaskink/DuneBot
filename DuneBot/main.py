@@ -410,7 +410,7 @@ async def guess(interaction: discord.Interaction, guess: str):
     if guess == game.get_word():
         await interaction.followup.send("You win!")
         await end_wordle_game(interaction.user.id)
-        player_win_game(interaction.user.id)
+        await player_win_game(interaction.user.id)
         return
     
     discarded_letters = game.get_discarded_letters()
@@ -435,7 +435,7 @@ async def guess(interaction: discord.Interaction, guess: str):
         await interaction.channel.send("The word was: " + game.get_word().upper())
         await end_wordle_game(interaction.user.id)
         await interaction.followup.send("Play again with /wordle")
-        player_lose_game(interaction.user.id)
+        await player_lose_game(interaction.user.id)
         return
     
     await interaction.followup.send("Guess again with /guess")
@@ -485,10 +485,10 @@ def player_in_stats(user_id):
         return False
     
 
-def player_win_game(user_id):
+async def player_win_game(user_id):
     # If player is not in stats.csv, add them
     if not player_in_stats(user_id):
-        add_player_to_stats(user_id)
+        await add_player_to_stats(user_id)
     
     # Update stats.csv and add 1 to second column
     with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
@@ -504,10 +504,10 @@ def player_win_game(user_id):
         csv_writer.writerows(lines)
 
 
-def player_lose_game(user_id):
+async def player_lose_game(user_id):
     # If player is not in stats.csv, add them
     if not player_in_stats(user_id):
-        add_player_to_stats(user_id)
+        await add_player_to_stats(user_id)
     
     # Update stats.csv and add 1 to third column
     with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
@@ -523,13 +523,13 @@ def player_lose_game(user_id):
         csv_writer.writerows(lines)
 
 
-def add_player_to_stats(user_id):
+async def add_player_to_stats(user_id):
     with open(base_path + 'wordle/player_stats.csv', 'a') as stats_file:
         csv_writer = csv.writer(stats_file)
         csv_writer.writerow([user_id, 0, 0])
 
 
-def get_wins(user_id):
+async def get_wins(user_id):
     with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
         csv_reader = csv.reader(stats_file)
 
@@ -538,7 +538,7 @@ def get_wins(user_id):
                 return row[1]
 
 
-def get_losses(user_id):
+async def get_losses(user_id):
     with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
         csv_reader = csv.reader(stats_file)
 
@@ -551,8 +551,8 @@ def get_losses(user_id):
 @app_commands.describe(player="Type in the name of the player whose stats you wish to see.")
 async def wordle_player_stats(interaction: discord.Interaction, player: discord.User):
     if player_in_stats(player.id):
-        wins = get_wins(player.id)
-        losses = get_losses(player.id)
+        wins = await get_wins(player.id)
+        losses = await get_losses(player.id)
         await interaction.response.send_message(f"{player.display_name} has {wins} wins and {losses} losses")
     else:
         await interaction.response.send_message(f"{player.display_name} has not played any wordle games")
