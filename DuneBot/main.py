@@ -402,11 +402,11 @@ async def guess(interaction: discord.Interaction, guess: str):
     
     result_string = await check_guess(guess, game)
 
-    await interaction.channel.send(interaction.user.display_name + " guessed: " + guess)
+    await interaction.channel.send(interaction.user.display_name + " guessed: " + guess.upper())
 
     await interaction.channel.send(result_string)
 
-    if result_string == "🟩" * game.get_word_length():
+    if guess == game.get_word():
         await interaction.followup.send("You win!")
         await end_wordle_game(interaction.user.id)
         return
@@ -430,7 +430,7 @@ async def guess(interaction: discord.Interaction, guess: str):
 
     if game.get_guesses_left() == 0:
         await interaction.channel.send("You lose!")
-        await interaction.channel.send("The word was: " + game.get_word())
+        await interaction.channel.send("The word was: " + game.get_word().upper())
         await end_wordle_game(interaction.user.id)
         await interaction.followup.send("Play again with /wordle")
         return
