@@ -551,8 +551,8 @@ async def get_losses(user_id):
 @app_commands.describe(player="Type in the name of the player whose stats you wish to see.")
 async def wordle_player_stats(interaction: discord.Interaction, player: discord.User):
     if await player_in_stats(str(player.id)):
-        wins = await get_wins(player.id)
-        losses = await get_losses(player.id)
+        wins = await get_wins(str(player.id))
+        losses = await get_losses(str(player.id))
         await interaction.response.send_message(f"{player.display_name} has {wins} wins and {losses} losses")
     else:
         await interaction.response.send_message(f"{player.display_name} has not played any wordle games")
