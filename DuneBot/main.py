@@ -393,6 +393,11 @@ async def guess(interaction: discord.Interaction, guess: str):
         length = game.get_word_length()
         await interaction.followup.send(f"Guess must be {length} letters long")
         return
+
+    # If guess contains non-alphabetical characters
+    if not guess.isalpha():
+        await interaction.followup.send("Guess must contain only letters")
+        return
     
     if not game.is_dune_mode():
         valid_guesses = await get_valid_guesses()
