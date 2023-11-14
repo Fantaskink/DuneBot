@@ -553,13 +553,26 @@ async def get_losses(user_id):
                 return row[2]
 
 
+async def get_win_percentage(user_id):
+    with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+
+        for row in csv_reader:
+            if row[0] == user_id:
+                if int(row[1]) + int(row[2]) == 0:
+                    return 0
+                else:
+                    return round(int(row[1]) / (int(row[1]) + int(row[2])) * 100, 2)
+
+
 @bot.tree.command(name="wordle_player_stats")
 @app_commands.describe(player="Type in the name of the player whose stats you wish to see.")
 async def wordle_player_stats(interaction: discord.Interaction, player: discord.User):
     if await player_in_stats(str(player.id)):
         wins = await get_wins(str(player.id))
         losses = await get_losses(str(player.id))
-        await interaction.response.send_message(f"{player.display_name} has {wins} wins and {losses} losses")
+        win_rate = await get_win_percentage(str(player.id))
+        await interaction.response.send_message(f"{player.display_name} has {wins} wins and {losses} losses.\n Win rate: {win_rate}%")
     else:
         await interaction.response.send_message(f"{player.display_name} has not played any wordle games")
 
