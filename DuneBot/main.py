@@ -410,7 +410,7 @@ async def guess(interaction: discord.Interaction, guess: str):
     if guess == game.get_word():
         await interaction.followup.send("You win!")
         await end_wordle_game(interaction.user.id)
-        await player_win_game(interaction.user.id)
+        await player_win_game(str(interaction.user.id))
         return
     
     discarded_letters = game.get_discarded_letters()
@@ -435,7 +435,7 @@ async def guess(interaction: discord.Interaction, guess: str):
         await interaction.channel.send("The word was: " + game.get_word().upper())
         await end_wordle_game(interaction.user.id)
         await interaction.followup.send("Play again with /wordle")
-        await player_lose_game(interaction.user.id)
+        await player_lose_game(str(interaction.user.id))
         return
     
     await interaction.followup.send("Guess again with /guess")
@@ -506,7 +506,7 @@ async def player_win_game(user_id):
 
 async def player_lose_game(user_id):
     # If player is not in stats.csv, add them
-    if not player_in_stats(str(user_id)):
+    if not await player_in_stats(user_id):
         await add_player_to_stats(user_id)
     
     # Update stats.csv and add 1 to third column
