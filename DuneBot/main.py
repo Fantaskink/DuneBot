@@ -475,7 +475,13 @@ async def end_wordle_game(user_id: discord.User.id):
     
 
 async def player_in_stats(user_id):
-    with open(base_path + 'wordle/player_stats.csv', 'r') as stats_file:
+    file_path = base_path + 'wordle/player_stats.csv'
+
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        print("File is empty or doesn't exist")
+        return False
+    
+    with open(file_path, 'r') as stats_file:
         csv_reader = csv.reader(stats_file)
 
         for row in csv_reader:
