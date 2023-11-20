@@ -595,7 +595,7 @@ async def kino(interaction: discord.Interaction, movie_title: str, year: str):
 
         title = movie_data['Title'] + " (" + movie_data['Year'] + ")"
 
-        thumbnail_url = 'https://m.media-amazon.com/images/M/MV5BNjU3N2QxNzYtMjk1NC00MTc4LTk1NTQtMmUxNTljM2I0NDA5XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg'
+        thumbnail_url = movie_data['Poster']
 
         movie_link = f"https://www.imdb.com/title/{movie_data['imdbID']}"
 
