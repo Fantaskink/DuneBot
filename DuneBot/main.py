@@ -587,11 +587,12 @@ async def wordle_player_stats(interaction: discord.Interaction, player: discord.
 async def kino(interaction: discord.Interaction, movie_title: str, year: str):
     await interaction.response.defer()
     from kino import get_movie_data
+    from primarycolor import get_primary_hex_color
 
     movie_data = get_movie_data(movie_title, year)
 
     if movie_data:
-        color_hex = discord.Colour.green()
+        color_hex = get_primary_hex_color(movie_data['Poster'])
 
         title = movie_data['Title'] + " (" + movie_data['Year'] + ")"
 
