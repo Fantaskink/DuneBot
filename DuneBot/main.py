@@ -582,9 +582,48 @@ async def wordle_player_stats(interaction: discord.Interaction, player: discord.
         await interaction.response.send_message(f"{player.display_name} has not played any wordle games")
 
 
+@bot.tree.command(name="kino")
+@app_commands.describe(movie_title="Type in the name of the movie you wish to look up.", year="Type in the year the movie was released.")
+async def kino(interaction: discord.Interaction, movie_title: str, year: str):
+    await interaction.response.defer()
+    from kino import get_movie_data
+
+    movie_data = get_movie_data(movie_title, year)
+
+    if movie_data:
+        color_hex = discord.Colour.green()
+
+        title = movie_data['Title'] + " (" + movie_data['Year'] + ")"
+
+        thumbnail_url = 'https://m.media-amazon.com/images/M/MV5BNjU3N2QxNzYtMjk1NC00MTc4LTk1NTQtMmUxNTljM2I0NDA5XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg'
+
+        movie_link = f"https://www.imdb.com/title/{movie_data['imdbID']}"
+
+        discord_embed = discord.Embed(title=title, url=movie_link, color=color_hex)
+        
+        discord_embed.set_thumbnail(url=thumbnail_url)
+
+        discord_embed.add_field(name='Director', value=movie_data['Director'], inline=False)
+
+        discord_embed.add_field(name='Genre', value=movie_data['Genre'], inline=True)
+
+        discord_embed.add_field(name='Runtime', value=movie_data['Runtime'], inline=True)
+
+        discord_embed.add_field(name='Description', value=movie_data['Plot'], inline=False)
+
+        discord_embed.add_field(name='IMDb Rating', value=movie_data['imdbRating'], inline=True)
+
+        rotten_tomatoes_score = None
+        for rating in movie_data['Ratings']:
+            if rating['Source'] == 'Rotten Tomatoes':
+                rotten_tomatoes_score = rating['Value']
 
 
+        discord_embed.add_field(name='Rotten Tomatoes Score', value=rotten_tomatoes_score, inline=True)
 
+        discord_embed.add_field(name='Metacritic Score', value=movie_data['Metascore'], inline=True)
+
+        await interaction.followup.send(embed=discord_embed)
 '''
 
 # Set up subreddit streaming in specific channel
