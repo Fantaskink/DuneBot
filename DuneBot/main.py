@@ -624,6 +624,8 @@ async def kino(interaction: discord.Interaction, movie_title: str, year: str):
 
         discord_embed.add_field(name='Metacritic Score', value=movie_data['Metascore'], inline=True)
 
+        discord_embed.add_field(name='Box Office', value=movie_data['BoxOffice'], inline=False)
+
         await interaction.followup.send(embed=discord_embed)
 '''
 
