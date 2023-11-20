@@ -535,74 +535,101 @@ async def wordle_player_stats(interaction: discord.Interaction, player: discord.
 @app_commands.describe(movie_title="Type in the name of the movie you wish to look up.", year="Type in the year the movie was released.")
 async def kino(interaction: discord.Interaction, movie_title: str, year: str):
     await interaction.response.defer()
-    from DuneBot.media_fetcher import fetch_movie_data
+    from media_fetcher import fetch_movie_data
     from primarycolor import get_primary_hex_color
 
     movie_data = fetch_movie_data(movie_title, year)
 
-    if movie_data:
-        color_hex = get_primary_hex_color(movie_data['Poster'])
+    if movie_data is None:
+        await interaction.followup.send("Movie not found")
 
-        title = movie_data['Title'] + " (" + movie_data['Year'] + ")"
+    color_hex = get_primary_hex_color(movie_data['Poster'])
 
-        thumbnail_url = movie_data['Poster']
+    title = movie_data['Title'] + " (" + movie_data['Year'] + ")"
 
-        movie_link = f"https://www.imdb.com/title/{movie_data['imdbID']}"
+    thumbnail_url = movie_data['Poster']
 
-        discord_embed = discord.Embed(title=title, url=movie_link, color=color_hex)
-        
-        discord_embed.set_thumbnail(url=thumbnail_url)
+    movie_link = f"https://www.imdb.com/title/{movie_data['imdbID']}"
 
-        discord_embed.add_field(name='Director', value=movie_data['Director'], inline=False)
-        discord_embed.add_field(name='Genre', value=movie_data['Genre'], inline=True)
-        discord_embed.add_field(name='Runtime', value=movie_data['Runtime'], inline=True)
-        discord_embed.add_field(name='Description', value=movie_data['Plot'], inline=False)
-        discord_embed.add_field(name='IMDb Rating', value=movie_data['imdbRating'], inline=True)
+    discord_embed = discord.Embed(title=title, url=movie_link, color=color_hex)
+    
+    discord_embed.set_thumbnail(url=thumbnail_url)
 
-        rotten_tomatoes_score = None
-        for rating in movie_data['Ratings']:
-            if rating['Source'] == 'Rotten Tomatoes':
-                rotten_tomatoes_score = rating['Value']
+    discord_embed.add_field(name='Director', value=movie_data['Director'], inline=False)
+    discord_embed.add_field(name='Genre', value=movie_data['Genre'], inline=True)
+    discord_embed.add_field(name='Runtime', value=movie_data['Runtime'], inline=True)
+    discord_embed.add_field(name='Description', value=movie_data['Plot'], inline=False)
+    discord_embed.add_field(name='IMDb Rating', value=movie_data['imdbRating'], inline=True)
+
+    rotten_tomatoes_score = None
+    for rating in movie_data['Ratings']:
+        if rating['Source'] == 'Rotten Tomatoes':
+            rotten_tomatoes_score = rating['Value']
 
 
-        discord_embed.add_field(name='Rotten Tomatoes Score', value=rotten_tomatoes_score, inline=True)
-        discord_embed.add_field(name='Metacritic Score', value=movie_data['Metascore'], inline=True)
-        discord_embed.add_field(name='Box Office', value=movie_data['BoxOffice'], inline=False)
+    discord_embed.add_field(name='Rotten Tomatoes Score', value=rotten_tomatoes_score, inline=True)
+    discord_embed.add_field(name='Metacritic Score', value=movie_data['Metascore'], inline=True)
+    discord_embed.add_field(name='Box Office', value=movie_data['BoxOffice'], inline=False)
 
-        await interaction.followup.send(embed=discord_embed)
+    await interaction.followup.send(embed=discord_embed)
 
 
 @bot.tree.command(name="book")
 @app_commands.describe(book_title="Type in the name of the book you wish to look up.")
 async def book(interaction: discord.Interaction, book_title: str):
     await interaction.response.defer()
-    from media_fetcher import fetch_book_data
+    from media_fetcher import fetch_book_data, fetch_author_from_key, fetch_book_key
     from primarycolor import get_primary_hex_color
 
     data = fetch_book_data(book_title)
 
-    if data:
-        title = data['items'][0]['volumeInfo']['title'] + " (" + data['items'][0]['volumeInfo']['subtitle'] + ")"
-        authors = data['items'][0]['volumeInfo']['authors']
-        year = data['items'][0]['volumeInfo']['publishedDate']
-        description = data['items'][0]['volumeInfo']['description']
-        thumbnail_url = data['items'][0]['volumeInfo']['imageLinks']['thumbnail']
-        page_count = data['items'][0]['volumeInfo']['pageCount']
+    if data is None:
+        await interaction.followup.send("Book not found")
 
-        color_hex = get_primary_hex_color(thumbnail_url)
+    title = data['title']
 
-        book_link = data['items'][0]['volumeInfo']['infoLink']
+    authors = data.get('authors', [])
 
-        discord_embed = discord.Embed(title=title, url=book_link, color=color_hex)
+    long_description = data['description']
 
-        discord_embed.set_thumbnail(url=thumbnail_url)
+    short_description = (long_description[:200] + '...') if len(long_description) > 75 else long_description
 
-        discord_embed.add_field(name='Authors', value=', '.join(authors), inline=True)
-        discord_embed.add_field(name='Published', value=year, inline=True)
-        discord_embed.add_field(name='Description', value=description, inline=False)
-        discord_embed.add_field(name='Page Count', value=page_count, inline=True)
+    author_string = ""
 
-        await interaction.followup.send(embed=discord_embed)
+    if len(authors) > 1:
+        for author_data in authors:
+            author_key = author_data.get('author', {}).get('key')
+            if author_key:
+                # Perform operations with author_key
+                author_string += (fetch_author_from_key(author_key)) + ", "
+    else:
+        author_string = fetch_author_from_key(authors[0].get('author', {}).get('key'))
+    
+
+    #color_hex = get_primary_hex_color(thumbnail_url)
+
+    color_hex = discord.Colour.red()
+
+    book_link = f"https://openlibrary.org/{data['key']}"
+
+    discord_embed = discord.Embed(title=title, url=book_link, color=color_hex)
+
+    book_key = fetch_book_key(book_title)
+
+    book_key = book_key.replace('/works/', '')
+
+    print(book_key)
+
+    thumbnail_url = f'https://covers.openlibrary.org/w/olid/{book_key}-M.jpg'
+
+    discord_embed.set_thumbnail(url=thumbnail_url)
+
+    discord_embed.add_field(name='Authors', value=author_string, inline=True)
+    #discord_embed.add_field(name='Published', value=oldest_publish_year, inline=True)
+    discord_embed.add_field(name='Description', value=short_description, inline=False)
+    #discord_embed.add_field(name='Page Count', value=page_count, inline=True)
+
+    await interaction.followup.send(embed=discord_embed)
 '''
 
 # Set up subreddit streaming in specific channel

@@ -18,7 +18,7 @@ def fetch_movie_data(movie_title, year):
     try:
         request_url = f"{base_url}?{'&'.join([f'{key}={value}' for key, value in params.items()])}"
 
-        print("Request URL:", request_url)  # Print the request URL
+        #print("Request URL:", request_url)  # Print the request URL
 
         response = requests.get(request_url)
         data = response.json()
@@ -36,24 +36,48 @@ def fetch_movie_data(movie_title, year):
         print("Request Exception:", e)
         return None
 
+
+# Fetches ISBN of the oldest book with the given title
 def fetch_book_data(query):
-    base_url = "https://www.googleapis.com/books/v1/volumes"
-    params = {"q": query, "maxResults": 1}
+    key = fetch_book_key(query)
+
+    if key is None:
+        return None
+    
+    base_url = f"https://openlibrary.org/{key}.json"
+
+    response = requests.get(base_url)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data
+
+
+def fetch_book_key(query):
+    
+    # Fill whitespace in query with '+'
+    query = query.replace(" ", "+")
+
+    base_url = "https://openlibrary.org/search.json?"
+    params = {"title": query, "limit": 1}
 
     response = requests.get(base_url, params=params)
 
     if response.status_code == 200:
         data = response.json()
+        if data['numFound'] > 0:
+            return data['docs'][0]['key']
+        else:
+            return None
 
-        return data
 
-        # Extract and display book information
-        for item in data.get("items", []):
-            volume_info = item.get("volumeInfo", {})
-            title = volume_info.get("title")
-            authors = volume_info.get("authors", "Unknown")
-            print(f"Title: {title}")
-            print(f"Authors: {', '.join(authors)}")
-            print("------------")
+def fetch_author_from_key(key):
+    base_url = f"https://openlibrary.org/{key}.json"
+
+    response = requests.get(base_url)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data['name']
     else:
         return None
