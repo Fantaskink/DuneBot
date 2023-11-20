@@ -56,8 +56,4 @@ def fetch_book_data(query):
             print(f"Authors: {', '.join(authors)}")
             print("------------")
     else:
-        print("Failed to fetch data")
-
-# Perform a search for books
-search_query = "Python programming"  # Replace with your desired query
-search_books(search_query)
+        return None
