@@ -5,7 +5,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 
-def get_movie_data(movie_title, year):
+def fetch_movie_data(movie_title, year):
     base_url = "http://www.omdbapi.com/"
     api_key = os.environ.get("OMDB_API_KEY")
 
@@ -36,22 +36,28 @@ def get_movie_data(movie_title, year):
         print("Request Exception:", e)
         return None
 
-# Replace 'Your Movie Title' with the movie you want to search for
-#movie_title = 'Barbie'
-#year = '2023'
-#movie_data = get_movie_data(movie_title, year)
+def fetch_book_data(query):
+    base_url = "https://www.googleapis.com/books/v1/volumes"
+    params = {"q": query, "maxResults": 1}
 
-#print(movie_data)
+    response = requests.get(base_url, params=params)
 
+    if response.status_code == 200:
+        data = response.json()
 
+        return data
 
-#if movie_data:
-    # Display the fetched movie data
-    #print("Title:", movie_data['Title'])
-    #print("Year:", movie_data['Year'])
-    #print("IMDb Rating:", movie_data['imdbRating'])
-    #print("Rotten Tomatoes Score:", movie_data['Value'])
-    #print("Plot:", movie_data['Plot'])
-    # Add more details as needed
-#else:
-    #print("No movie data found.")
+        # Extract and display book information
+        for item in data.get("items", []):
+            volume_info = item.get("volumeInfo", {})
+            title = volume_info.get("title")
+            authors = volume_info.get("authors", "Unknown")
+            print(f"Title: {title}")
+            print(f"Authors: {', '.join(authors)}")
+            print("------------")
+    else:
+        print("Failed to fetch data")
+
+# Perform a search for books
+search_query = "Python programming"  # Replace with your desired query
+search_books(search_query)

@@ -247,59 +247,8 @@ async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str
 
 
 
-@bot.tree.command(name="encyclopedia")
-@app_commands.describe(keyword="Type in the name of the entry you wish to look up.")
-async def encyclopedia(interaction: discord.Interaction, keyword: str):
-    file_path = base_path + 'csv/encyclopedia.csv'
-
-    with open(file_path, 'r', newline='') as csvfile:
-        csv_reader = csv.reader(csvfile, skipinitialspace=False)
-
-        for row in csv_reader:
-            if row:
-                if row[0].lower() == keyword.lower():
-                    page_count = len(row) - 1
-                    view = Pages(page_count)
-                    await interaction.response.send_message(row[1], view=view)
-                    await view.wait()
-                    if view.index is None:
-                        await interaction.response.edit_message(view=view)
-                    elif view.index:
-                        print("index" + str(view.index))
-                        await interaction.response.edit_message(view=view)
-                    else:
-                        print('Cancelled...')
-
-    await interaction.response.send_message(f"Entry not found.", ephemeral=True)
 
 
-# Define a simple View that gives us a confirmation menu
-class Pages(discord.ui.View):
-    def __init__(self, page_count: int):
-        super().__init__()
-        self.index = 0
-        self.page_count = page_count
-    
-    @discord.ui.button(label='Previous page', style=discord.ButtonStyle.primary)
-    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button, ):
-        await interaction.response.send_message('Confirming', ephemeral=True)
-        self.index = max(0, self.index - 1)
-        print(self.index)
-        await self.update_buttons()
-
-    
-    @discord.ui.button(label='Next page', style=discord.ButtonStyle.primary)
-    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message('Cancelling', ephemeral=True)
-        self.index = min(self.page_count, self.index + 1)
-        print(self.index)
-        print("page count" + str(self.page_count))
-        await self.update_buttons()
-    
-    async def update_buttons(self):
-        print("update buttons")
-        self.children[0].disabled = (self.index == 0)
-        self.children[1].disabled = (self.index == self.page_count)
 
 # Command that fetches the profile picture of a user and sends it as a message
 @bot.tree.command(name="pfp")
@@ -586,10 +535,10 @@ async def wordle_player_stats(interaction: discord.Interaction, player: discord.
 @app_commands.describe(movie_title="Type in the name of the movie you wish to look up.", year="Type in the year the movie was released.")
 async def kino(interaction: discord.Interaction, movie_title: str, year: str):
     await interaction.response.defer()
-    from kino import get_movie_data
+    from DuneBot.media_fetcher import fetch_movie_data
     from primarycolor import get_primary_hex_color
 
-    movie_data = get_movie_data(movie_title, year)
+    movie_data = fetch_movie_data(movie_title, year)
 
     if movie_data:
         color_hex = get_primary_hex_color(movie_data['Poster'])
@@ -605,13 +554,9 @@ async def kino(interaction: discord.Interaction, movie_title: str, year: str):
         discord_embed.set_thumbnail(url=thumbnail_url)
 
         discord_embed.add_field(name='Director', value=movie_data['Director'], inline=False)
-
         discord_embed.add_field(name='Genre', value=movie_data['Genre'], inline=True)
-
         discord_embed.add_field(name='Runtime', value=movie_data['Runtime'], inline=True)
-
         discord_embed.add_field(name='Description', value=movie_data['Plot'], inline=False)
-
         discord_embed.add_field(name='IMDb Rating', value=movie_data['imdbRating'], inline=True)
 
         rotten_tomatoes_score = None
@@ -621,10 +566,41 @@ async def kino(interaction: discord.Interaction, movie_title: str, year: str):
 
 
         discord_embed.add_field(name='Rotten Tomatoes Score', value=rotten_tomatoes_score, inline=True)
-
         discord_embed.add_field(name='Metacritic Score', value=movie_data['Metascore'], inline=True)
-
         discord_embed.add_field(name='Box Office', value=movie_data['BoxOffice'], inline=False)
+
+        await interaction.followup.send(embed=discord_embed)
+
+
+@bot.tree.command(name="book")
+@app_commands.describe(book_title="Type in the name of the book you wish to look up.")
+async def book(interaction: discord.Interaction, book_title: str):
+    await interaction.response.defer()
+    from media_fetcher import fetch_book_data
+    from primarycolor import get_primary_hex_color
+
+    data = fetch_book_data(book_title)
+
+    if data:
+        title = data['items'][0]['volumeInfo']['title'] + " (" + data['items'][0]['volumeInfo']['subtitle'] + ")"
+        authors = data['items'][0]['volumeInfo']['authors']
+        year = data['items'][0]['volumeInfo']['publishedDate']
+        description = data['items'][0]['volumeInfo']['description']
+        thumbnail_url = data['items'][0]['volumeInfo']['imageLinks']['thumbnail']
+        page_count = data['items'][0]['volumeInfo']['pageCount']
+
+        color_hex = get_primary_hex_color(thumbnail_url)
+
+        book_link = data['items'][0]['volumeInfo']['infoLink']
+
+        discord_embed = discord.Embed(title=title, url=book_link, color=color_hex)
+
+        discord_embed.set_thumbnail(url=thumbnail_url)
+
+        discord_embed.add_field(name='Authors', value=', '.join(authors), inline=True)
+        discord_embed.add_field(name='Published', value=year, inline=True)
+        discord_embed.add_field(name='Description', value=description, inline=False)
+        discord_embed.add_field(name='Page Count', value=page_count, inline=True)
 
         await interaction.followup.send(embed=discord_embed)
 '''
@@ -706,6 +682,61 @@ def verify_channels():
         channel = bot.get_channel(int(channel_id))
         if channel is None:
             database.delete_subreddit(document["_id"])
+
+
+@bot.tree.command(name="encyclopedia")
+@app_commands.describe(keyword="Type in the name of the entry you wish to look up.")
+async def encyclopedia(interaction: discord.Interaction, keyword: str):
+    file_path = base_path + 'csv/encyclopedia.csv'
+
+    with open(file_path, 'r', newline='') as csvfile:
+        csv_reader = csv.reader(csvfile, skipinitialspace=False)
+
+        for row in csv_reader:
+            if row:
+                if row[0].lower() == keyword.lower():
+                    page_count = len(row) - 1
+                    view = Pages(page_count)
+                    await interaction.response.send_message(row[1], view=view)
+                    await view.wait()
+                    if view.index is None:
+                        await interaction.response.edit_message(view=view)
+                    elif view.index:
+                        print("index" + str(view.index))
+                        await interaction.response.edit_message(view=view)
+                    else:
+                        print('Cancelled...')
+
+    await interaction.response.send_message(f"Entry not found.", ephemeral=True)
+
+
+# Define a simple View that gives us a confirmation menu
+class Pages(discord.ui.View):
+    def __init__(self, page_count: int):
+        super().__init__()
+        self.index = 0
+        self.page_count = page_count
+    
+    @discord.ui.button(label='Previous page', style=discord.ButtonStyle.primary)
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button, ):
+        await interaction.response.send_message('Confirming', ephemeral=True)
+        self.index = max(0, self.index - 1)
+        print(self.index)
+        await self.update_buttons()
+
+    
+    @discord.ui.button(label='Next page', style=discord.ButtonStyle.primary)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message('Cancelling', ephemeral=True)
+        self.index = min(self.page_count, self.index + 1)
+        print(self.index)
+        print("page count" + str(self.page_count))
+        await self.update_buttons()
+    
+    async def update_buttons(self):
+        print("update buttons")
+        self.children[0].disabled = (self.index == 0)
+        self.children[1].disabled = (self.index == self.page_count)
 
             
 '''
