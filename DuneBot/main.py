@@ -578,7 +578,7 @@ async def kino(interaction: discord.Interaction, movie_title: str, year: str):
 @app_commands.describe(book_title="Type in the name of the book you wish to look up.")
 async def book(interaction: discord.Interaction, book_title: str):
     await interaction.response.defer()
-    from media_fetcher import fetch_book_data, fetch_author_from_key, fetch_book_key
+    from media_fetcher import fetch_book_data
     from primarycolor import get_primary_hex_color
 
     data = fetch_book_data(book_title)
@@ -587,47 +587,31 @@ async def book(interaction: discord.Interaction, book_title: str):
         await interaction.followup.send("Book not found")
 
     title = data['title']
+    author = data['author']
+    rating = data['rating'] + "/5"
+    thumbnail_url = data['thumbnail_url']
+    page_count = data['page_count'][0]
+    publish_date = data['publish_date'][0]
+    book_link = data['book_link']
 
-    authors = data.get('authors', [])
 
-    long_description = data['description']
-
-    short_description = (long_description[:200] + '...') if len(long_description) > 75 else long_description
-
-    author_string = ""
-
-    if len(authors) > 1:
-        for author_data in authors:
-            author_key = author_data.get('author', {}).get('key')
-            if author_key:
-                # Perform operations with author_key
-                author_string += (fetch_author_from_key(author_key)) + ", "
+    if 'description' not in data:
+        long_description = "No description available"
     else:
-        author_string = fetch_author_from_key(authors[0].get('author', {}).get('key'))
+        long_description = data['description']
+        short_description = (long_description[:500] + '...') if len(long_description) > 75 else long_description
     
-
-    #color_hex = get_primary_hex_color(thumbnail_url)
-
-    color_hex = discord.Colour.red()
-
-    book_link = f"https://openlibrary.org/{data['key']}"
+    color_hex = get_primary_hex_color(thumbnail_url)    
 
     discord_embed = discord.Embed(title=title, url=book_link, color=color_hex)
 
-    book_key = fetch_book_key(book_title)
-
-    book_key = book_key.replace('/works/', '')
-
-    print(book_key)
-
-    thumbnail_url = f'https://covers.openlibrary.org/w/olid/{book_key}-M.jpg'
-
     discord_embed.set_thumbnail(url=thumbnail_url)
 
-    discord_embed.add_field(name='Authors', value=author_string, inline=True)
-    #discord_embed.add_field(name='Published', value=oldest_publish_year, inline=True)
+    discord_embed.add_field(name='Authors', value=author, inline=True)
+    discord_embed.add_field(name='Published', value=publish_date, inline=True)
+    discord_embed.add_field(name='Rating', value=rating, inline=False)
     discord_embed.add_field(name='Description', value=short_description, inline=False)
-    #discord_embed.add_field(name='Page Count', value=page_count, inline=True)
+    discord_embed.add_field(name='Page Count', value=page_count, inline=True)
 
     await interaction.followup.send(embed=discord_embed)
 '''

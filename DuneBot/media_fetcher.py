@@ -1,7 +1,6 @@
 import requests
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 import os 
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -41,29 +40,61 @@ def fetch_movie_data(movie_title, year):
 
 # Fetches ISBN of the oldest book with the given title
 def fetch_book_data(query):
+    book_link = search_title_on_goodreads(query)
+
+    if book_link is None:
+        return None
+    
+    response = requests.get(book_link)
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Find the element with class "Text Text__title1"
+    title_header = soup.find(class_="Text Text__title1")
+
+    author_span = soup.find(class_="ContributorLink__name")
+
+    rating_div = soup.find(class_="RatingStatistics__rating")
+
+    thumbnail_img = soup.find(class_="ResponsiveImage")['src']
+
+    description_span = soup.find(class_="Formatted")
+
+    details_div = soup.find(class_="FeaturedDetails")
+
+    p_elements = details_div.find_all('p')
+
+    data = {}
+
+    data['title'] = title_header.text
+    data['author'] = author_span.text
+    data['rating'] = rating_div.text
+    data['thumbnail_url'] = thumbnail_img
+    data['description'] = description_span.text
+    data['page_count'] = [p_elements[0].get_text()]
+    data['publish_date'] = [p_elements[1].get_text()]
+    data['book_link'] = book_link
+
+    return data
+
+    
+
+def search_title_on_goodreads(query):
+    # Replace whitespace in query with +
+    query = query.replace(' ', '+')
     search_url = f'https://www.goodreads.com/search?q={query}&qid='
+    try:
+        response = requests.get(search_url)
 
-    # Start a browser session
-    driver = webdriver.Firefox()
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-    driver.get(search_url)
+        table = soup.find('table', class_='tableList')
 
-    table_body = driver.find_element(By.TAG_NAME, 'tbody')
+        anchor = table.find('a')
 
-    # Get the first row of the table
-    first_row = table_body.find_element(By.TAG_NAME, 'tr')
-
-    # Get the second column of the row
-    second_column = first_row.find_elements(By.TAG_NAME, 'td')[1]
-
-    # Get the anchor tag inside the second column
-    anchor_tag = second_column.find_element(By.TAG_NAME, 'a')
-
-    # Get the href attribute of the anchor tag
-    href = anchor_tag.get_attribute('href')
-
-    book_url = href
-
-    print("Book URL:", book_url)
-
-fetch_book_data('The Alchemist')
+        href = anchor['href']
+        
+        return 'https://www.goodreads.com' + href
+    except requests.RequestException as e:
+        print("Request Exception:", e)
+        return None
