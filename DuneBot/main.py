@@ -609,9 +609,9 @@ async def book(interaction: discord.Interaction, book_title: str):
 
     discord_embed.add_field(name='Authors', value=author, inline=True)
     discord_embed.add_field(name='Published', value=publish_date, inline=True)
-    discord_embed.add_field(name='Rating', value=rating, inline=False)
     discord_embed.add_field(name='Description', value=short_description, inline=False)
     discord_embed.add_field(name='Page Count', value=page_count, inline=True)
+    discord_embed.add_field(name='Rating', value=rating, inline=True)
 
     await interaction.followup.send(embed=discord_embed)
 '''
