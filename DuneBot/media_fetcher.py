@@ -1,4 +1,6 @@
 import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 import os 
 from dotenv import load_dotenv, find_dotenv
 
@@ -39,45 +41,29 @@ def fetch_movie_data(movie_title, year):
 
 # Fetches ISBN of the oldest book with the given title
 def fetch_book_data(query):
-    key = fetch_book_key(query)
+    search_url = f'https://www.goodreads.com/search?q={query}&qid='
 
-    if key is None:
-        return None
-    
-    base_url = f"https://openlibrary.org/{key}.json"
+    # Start a browser session
+    driver = webdriver.Firefox()
 
-    response = requests.get(base_url)
+    driver.get(search_url)
 
-    if response.status_code == 200:
-        data = response.json()
-        return data
+    table_body = driver.find_element(By.TAG_NAME, 'tbody')
 
+    # Get the first row of the table
+    first_row = table_body.find_element(By.TAG_NAME, 'tr')
 
-def fetch_book_key(query):
-    
-    # Fill whitespace in query with '+'
-    query = query.replace(" ", "+")
+    # Get the second column of the row
+    second_column = first_row.find_elements(By.TAG_NAME, 'td')[1]
 
-    base_url = "https://openlibrary.org/search.json?"
-    params = {"title": query, "limit": 1}
+    # Get the anchor tag inside the second column
+    anchor_tag = second_column.find_element(By.TAG_NAME, 'a')
 
-    response = requests.get(base_url, params=params)
+    # Get the href attribute of the anchor tag
+    href = anchor_tag.get_attribute('href')
 
-    if response.status_code == 200:
-        data = response.json()
-        if data['numFound'] > 0:
-            return data['docs'][0]['key']
-        else:
-            return None
+    book_url = href
 
+    print("Book URL:", book_url)
 
-def fetch_author_from_key(key):
-    base_url = f"https://openlibrary.org/{key}.json"
-
-    response = requests.get(base_url)
-
-    if response.status_code == 200:
-        data = response.json()
-        return data['name']
-    else:
-        return None
+fetch_book_data('The Alchemist')
