@@ -26,4 +26,5 @@ def get_primary_hex_color(image_url):
     primary_color_rgb = colors[primary_color_index]
     primary_hex = '#{:02x}{:02x}{:02x}'.format(*primary_color_rgb)
 
-    return primary_hex
+    
+    return int(primary_hex[1:], 16)
