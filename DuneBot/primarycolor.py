@@ -8,10 +8,10 @@ def get_primary_hex_color(image_url):
     image = Image.open(BytesIO(response.content))
 
     # Resize the image to a small size for faster processing (e.g., 100x100)
-    resized_image = image.resize((100, 100))
+    #resized_image = image.resize((100, 100))
     
     # Convert the image to a NumPy array
-    img_array = np.array(resized_image)
+    img_array = np.array(image)
     
     # Flatten the array to easily get color counts
     flat_array = img_array.reshape(-1, img_array.shape[-1])
