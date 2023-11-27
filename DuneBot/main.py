@@ -550,13 +550,13 @@ async def kino(interaction: discord.Interaction, movie_title: str, year: str):
 
     title = movie_data['Title'] + " (" + movie_data['Year'] + ")"
 
-    thumbnail_url = movie_data['Poster']
-
     movie_link = f"https://www.imdb.com/title/{movie_data['imdbID']}"
 
     discord_embed = discord.Embed(title=title, url=movie_link, color=color_hex)
     
-    discord_embed.set_thumbnail(url=thumbnail_url)
+    if movie_data['Poster'] != 'N/A':
+        thumbnail_url = movie_data['Poster']
+        discord_embed.set_thumbnail(url=thumbnail_url)
 
     discord_embed.add_field(name='Director', value=movie_data['Director'], inline=False)
     discord_embed.add_field(name='Genre', value=movie_data['Genre'], inline=True)
