@@ -543,7 +543,10 @@ async def kino(interaction: discord.Interaction, movie_title: str, year: str):
     if movie_data is None:
         await interaction.followup.send("Movie not found")
 
-    color_hex = get_primary_hex_color(movie_data['Poster'])
+    if movie_data['Poster'] == 'N/A':
+        color_hex = discord.Colour.blue()
+    else:
+        color_hex = get_primary_hex_color(movie_data['Poster'])
 
     title = movie_data['Title'] + " (" + movie_data['Year'] + ")"
 

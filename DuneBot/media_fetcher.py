@@ -49,19 +49,12 @@ def fetch_book_data(query):
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Find the element with class "Text Text__title1"
     title_header = soup.find(class_="Text Text__title1")
-
     author_span = soup.find(class_="ContributorLink__name")
-
     rating_div = soup.find(class_="RatingStatistics__rating")
-
     thumbnail_img = soup.find(class_="ResponsiveImage")['src']
-
     description_span = soup.find(class_="Formatted")
-
     details_div = soup.find(class_="FeaturedDetails")
-
     p_elements = details_div.find_all('p')
 
     data = {}
@@ -98,3 +91,5 @@ def search_title_on_goodreads(query):
     except requests.RequestException as e:
         print("Request Exception:", e)
         return None
+
+print(fetch_movie_data('Birdman', '2014'))
