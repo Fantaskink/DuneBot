@@ -75,7 +75,8 @@ def fetch_book_data(query):
 
 def search_title_on_goodreads(query):
     query = urllib.parse.quote_plus(query)
-    search_url = f'https://www.goodreads.com/search?q={query}&qid='
+    search_url = f'https://www.goodreads.com/search?utf8=✓&q={query}&search_type=books&search%5Bfield%5D=on'
+    
     try:
         response = requests.get(search_url)
 
@@ -92,4 +93,4 @@ def search_title_on_goodreads(query):
         print("Request Exception:", e)
         return None
 
-print(fetch_movie_data('Birdman', '2014'))
+#print(fetch_movie_data('Birdman', '2014'))
