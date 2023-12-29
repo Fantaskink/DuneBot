@@ -1,6 +1,7 @@
 import requests
 import os 
 from bs4 import BeautifulSoup
+import urllib.parse
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -73,8 +74,7 @@ def fetch_book_data(query):
     
 
 def search_title_on_goodreads(query):
-    # Replace whitespace in query with +
-    query = query.replace(' ', '+')
+    query = urllib.parse.quote_plus(query)
     search_url = f'https://www.goodreads.com/search?q={query}&qid='
     try:
         response = requests.get(search_url)
