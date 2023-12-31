@@ -102,7 +102,7 @@ async def get_spoiler_keywords():
 
 def is_marked_spoiler(text, keyword):
     pattern = rf'.*\|\|.*{re.escape(keyword)}.*\|\|.*'
-    return re.match(pattern, text)
+    return re.search(pattern, text, re.DOTALL)
 
 
 async def update_presence():

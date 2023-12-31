@@ -94,3 +94,4 @@ def search_title_on_goodreads(query):
         return None
 
 #print(fetch_movie_data('Birdman', '2014'))
+#print(fetch_book_data('earthsea'))
