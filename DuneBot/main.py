@@ -413,6 +413,10 @@ async def check_guess(guess, game: wordle_game):
         if guess[i] in letters and guess[i] != solution[i]:
             output[i] = "🟨"
             letters.remove(guess[i])
+    
+    for i in range(solution_length):
+        if output[i] == "_":
+            output[i] = "⬜"
 
     output_string = "".join(output)  # Use join() for string concatenation
 
