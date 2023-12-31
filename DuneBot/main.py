@@ -405,12 +405,13 @@ async def check_guess(guess, game: wordle_game):
     for i in range(0, solution_length):
         if guess[i] == solution[i]:
             output[i] = "🟩"
-            letters.remove(guess[i])
-        
-        elif guess[i] in solution and guess[i] in letters and guess[i] != solution[i]:
+            if guess[i] in letters:
+                letters.remove(guess[i])
+
+        elif guess[i] in solution and guess[i] in letters:
             output[i] = "🟨"
-            letters.remove(guess[i])
-        
+            if guess[i] in letters:
+                letters.remove(guess[i])
         else:
             output[i] = "⬜"
             if guess[i] not in solution:
