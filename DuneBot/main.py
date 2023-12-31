@@ -400,26 +400,21 @@ async def check_guess(guess, game: wordle_game):
     solution = game.get_word()
     solution_length = game.get_word_length()
     output = ["_" for _ in range(solution_length)]
-    letters = []
+    letters = list(solution)  # Initialize letters directly with the solution
     
-    for i in range(0, solution_length):
-        letters.append(solution[i])
+    for i in range(solution_length):
+        if guess[i] == solution[i]:
+            output[i] = "🟩"
+            letters[i] = None  # Mark the correctly guessed letter to avoid reusing it
+        else:
+            game.update_discarded_letters(guess[i])
 
-    for i in range(0, solution_length):
-        if guess[i] in solution and guess[i] in letters and guess[i] != solution[i]:
+    for i in range(solution_length):
+        if guess[i] in letters and guess[i] != solution[i]:
             output[i] = "🟨"
             letters.remove(guess[i])
-        elif guess[i] == solution[i]:
-            output[i] = "🟩"
-            letters.remove(guess[i])
-        else:
-            output[i] = "⬜"
-            if guess[i] not in solution:
-                game.update_discarded_letters(guess[i])
 
-    output_string = ""
-    for letter in output:
-        output_string += letter
+    output_string = "".join(output)  # Use join() for string concatenation
 
     return output_string
 
