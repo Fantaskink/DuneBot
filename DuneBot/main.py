@@ -70,12 +70,30 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
         modlog_channel = bot.get_channel(1131571647665672262)
 
     # Check that author is not Dune bot and check that authors first role is not Thinking Machine
-    if before.author.id != 1064478983095332864 and before.author.roles[0].id != 701709720410652762: 
+    if before.author.id == 1064478983095332864 or before.author.roles[0].id == 701709720410652762: 
+        return
+    
+    if before.content == after.content:
+        return
+    
         if before.author.global_name != before.author.display_name:
             name = f"{before.author.global_name} aka {before.author.display_name}"
         else:
             name = f"{before.author.global_name}"
         await modlog_channel.send(f"Message {after.jump_url} edited from \n{before.content} \nto \n{after.content}")
+    
+    description = f"Message edited in {before.jump_url}"
+    color = discord.Colour.gold()
+    name = after.author.display_name
+    icon_url = after.author.avatar.url
+
+    discord_embed = discord.Embed(color=color, description=description)
+    discord_embed.set_author(name=name, icon_url=icon_url)
+
+    discord_embed.add_field(name="Old Message", value=before.content, inline=False)
+    discord_embed.add_field(name="New Message", value=after.content, inline=False)
+
+    await modlog_channel.send(embed=discord_embed)
 
 
 async def check_spoiler(message):
