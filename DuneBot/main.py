@@ -52,7 +52,8 @@ async def on_message_delete(message: discord.Message):
     elif environment == "development":
         modlog_channel = bot.get_channel(1131571647665672262)
 
-    if message.author.id != 1064478983095332864:
+    # Check that author is not Dune bot and check that authors first role is not Thinking Machine
+    if message.author.id != 1064478983095332864 and message.author.roles[0].id != 701709720410652762: 
 
         if message.author.global_name != message.author.display_name:
             name = f"{message.author.global_name} aka {message.author.display_name}"
