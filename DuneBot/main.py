@@ -75,7 +75,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
             name = f"{before.author.global_name} aka {before.author.display_name}"
         else:
             name = f"{before.author.global_name}"
-        await modlog_channel.send(f"Message {after.jump_url} edited from \n {before.content} \n to \n  {after.content}")
+        await modlog_channel.send(f"Message {after.jump_url} edited from \n {before.content} \nto \n{after.content}")
 
 
 async def check_spoiler(message):
