@@ -48,13 +48,11 @@ async def on_message(message: discord.Message):
 async def on_message_delete(message: discord.Message):
     if environment == "production":
         modlog_channel = bot.get_channel(701710310121275474)
-        
     elif environment == "development":
         modlog_channel = bot.get_channel(1131571647665672262)
 
     # Check that author is not Dune bot and check that authors first role is not Thinking Machine
     if message.author.id != 1064478983095332864 and message.author.roles[0].id != 701709720410652762: 
-
         if message.author.global_name != message.author.display_name:
             name = f"{message.author.global_name} aka {message.author.display_name}"
         else:
@@ -63,6 +61,21 @@ async def on_message_delete(message: discord.Message):
         await modlog_channel.send(f"Message deleted in {message.channel.mention}:\n{name} sent: {message.content}")
         for attachment in message.attachments:
             await modlog_channel.send(attachment)
+
+@bot.event
+async def on_message_edit(before: discord.Message, after: discord.Message):
+    if environment == "production":
+        modlog_channel = bot.get_channel(701710310121275474) 
+    elif environment == "development":
+        modlog_channel = bot.get_channel(1131571647665672262)
+
+    # Check that author is not Dune bot and check that authors first role is not Thinking Machine
+    if before.author.id != 1064478983095332864 and before.author.roles[0].id != 701709720410652762: 
+        if before.author.global_name != before.author.display_name:
+            name = f"{before.author.global_name} aka {before.author.display_name}"
+        else:
+            name = f"{before.author.global_name}"
+        await modlog_channel.send(f"Message {after.jump_url} edited from \n {before.content} to {after.content}")
 
 
 async def check_spoiler(message):
