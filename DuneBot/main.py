@@ -60,12 +60,12 @@ async def on_message_delete(message: discord.Message):
         if message.author.roles[0].id == 701709720410652762: 
             return
     
-    if message.author.global_name != message.author.display_name:
+    if message.author.global_name != message.author.display_name and message.author.display_name != None:
         name = f"{message.author.global_name} aka {message.author.display_name}"
     else:
         name = f"{message.author.global_name}"
 
-    await modlog_channel.send(f"Message deleted in {message.channel.mention}:\n{name} sent: {message.content}")
+    await modlog_channel.send(f"Message deleted in {message.channel.mention}:\n{name} sent: {message.content}", allowed_mentions=discord.AllowedMentions.none())
     for attachment in message.attachments:
         await modlog_channel.send(attachment)
 
