@@ -69,8 +69,8 @@ def fetch_book_data(query):
 
         return data
     
-    except requests.RequestException as e:
-        print("Request Exception:", e)
+    except Exception as e:
+        print("Exception:", e)
         return None
 
 
@@ -91,8 +91,8 @@ def search_title_on_goodreads(query):
         href = anchor['href']
         
         return 'https://www.goodreads.com' + href
-    except requests.RequestException as e:
-        print("Request Exception:", e)
+    except Exception as e:
+        print("Exception:", e)
         return None
 
 #print(fetch_movie_data('Birdman', '2014'))
