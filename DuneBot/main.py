@@ -648,6 +648,7 @@ async def book(interaction: discord.Interaction, book_title: str):
 
     if data is None:
         await interaction.followup.send("Book not found")
+        return
 
     title = data['title']
     author = data['author']
