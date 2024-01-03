@@ -51,16 +51,23 @@ async def on_message_delete(message: discord.Message):
     elif environment == "development":
         modlog_channel = bot.get_channel(1131571647665672262)
 
-    # Check that author is not Dune bot and check that authors first role is not Thinking Machine
-    if message.author.id != 1064478983095332864 and message.author.roles[0].id != 701709720410652762: 
-        if message.author.global_name != message.author.display_name:
-            name = f"{message.author.global_name} aka {message.author.display_name}"
-        else:
-            name = f"{message.author.global_name}"
+    # Check that author is not Dune bot
+    if message.author.id == 1064478983095332864:
+        return
+    
+    # Check that author's first role is not Thinking Machine
+    if message.author.roles is not None:
+        if message.author.roles[0].id == 701709720410652762: 
+            return
+    
+    if message.author.global_name != message.author.display_name:
+        name = f"{message.author.global_name} aka {message.author.display_name}"
+    else:
+        name = f"{message.author.global_name}"
 
-        await modlog_channel.send(f"Message deleted in {message.channel.mention}:\n{name} sent: {message.content}")
-        for attachment in message.attachments:
-            await modlog_channel.send(attachment)
+    await modlog_channel.send(f"Message deleted in {message.channel.mention}:\n{name} sent: {message.content}")
+    for attachment in message.attachments:
+        await modlog_channel.send(attachment)
 
 @bot.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
@@ -70,8 +77,12 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
         modlog_channel = bot.get_channel(1131571647665672262)
 
     # Check that author is not Dune bot and check that authors first role is not Thinking Machine
-    if before.author.id == 1064478983095332864 or before.author.roles[0].id == 701709720410652762: 
+    if before.author.id == 1064478983095332864:
         return
+
+    if before.author.roles is not None:
+        if before.author.roles[0].id == 701709720410652762: 
+            return
     
     if before.content == after.content:
         return
