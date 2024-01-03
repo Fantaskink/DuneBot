@@ -50,6 +50,9 @@ def fetch_book_data(query):
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
+    if soup is None:
+        return None
+
     title_header = soup.find(class_="Text Text__title1")
     author_span = soup.find(class_="ContributorLink__name")
     rating_div = soup.find(class_="RatingStatistics__rating")
