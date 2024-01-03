@@ -41,40 +41,39 @@ def fetch_movie_data(movie_title, year):
 
 # Fetches ISBN of the oldest book with the given title
 def fetch_book_data(query):
-    book_link = search_title_on_goodreads(query)
+    try:
+        book_link = search_title_on_goodreads(query)
+        
+        response = requests.get(book_link)
 
-    if book_link is None:
-        return None
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        title_header = soup.find(class_="Text Text__title1")
+        author_span = soup.find(class_="ContributorLink__name")
+        rating_div = soup.find(class_="RatingStatistics__rating")
+        thumbnail_img = soup.find(class_="ResponsiveImage")['src']
+        description_span = soup.find(class_="Formatted")
+        details_div = soup.find(class_="FeaturedDetails")
+        p_elements = details_div.find_all('p')
+
+        data = {}
+
+        data['title'] = title_header.text
+        data['author'] = author_span.text
+        data['rating'] = rating_div.text
+        data['thumbnail_url'] = thumbnail_img
+        data['description'] = description_span.text
+        data['page_count'] = [p_elements[0].get_text()]
+        data['publish_date'] = [p_elements[1].get_text()]
+        data['book_link'] = book_link
+
+        return data
     
-    response = requests.get(book_link)
-
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    if soup is None:
+    except requests.RequestException as e:
+        print("Request Exception:", e)
         return None
 
-    title_header = soup.find(class_="Text Text__title1")
-    author_span = soup.find(class_="ContributorLink__name")
-    rating_div = soup.find(class_="RatingStatistics__rating")
-    thumbnail_img = soup.find(class_="ResponsiveImage")['src']
-    description_span = soup.find(class_="Formatted")
-    details_div = soup.find(class_="FeaturedDetails")
-    p_elements = details_div.find_all('p')
 
-    data = {}
-
-    data['title'] = title_header.text
-    data['author'] = author_span.text
-    data['rating'] = rating_div.text
-    data['thumbnail_url'] = thumbnail_img
-    data['description'] = description_span.text
-    data['page_count'] = [p_elements[0].get_text()]
-    data['publish_date'] = [p_elements[1].get_text()]
-    data['book_link'] = book_link
-
-    return data
-
-    
 
 def search_title_on_goodreads(query):
     query = urllib.parse.quote_plus(query)
@@ -84,9 +83,6 @@ def search_title_on_goodreads(query):
         response = requests.get(search_url)
 
         soup = BeautifulSoup(response.content, 'html.parser')
-
-        if soup is None:
-            return None
 
         table = soup.find('table', class_='tableList')
 
