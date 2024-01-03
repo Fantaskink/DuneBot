@@ -104,7 +104,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     discord_embed.add_field(name="Old Message", value=before.content, inline=False)
     discord_embed.add_field(name="New Message", value=after.content, inline=False)
 
-    await modlog_channel.send(embed=discord_embed)
+    await modlog_channel.send(embed=discord_embed, allowed_mentions=discord.AllowedMentions.none())
 
 
 async def check_spoiler(message):
