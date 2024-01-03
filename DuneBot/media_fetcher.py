@@ -85,6 +85,9 @@ def search_title_on_goodreads(query):
 
         soup = BeautifulSoup(response.content, 'html.parser')
 
+        if soup is None:
+            return None
+
         table = soup.find('table', class_='tableList')
 
         anchor = table.find('a')
