@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext import tasks
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 import csv
 import os
 import re
@@ -21,6 +21,8 @@ environment = os.environ.get("ENVIRONMENT")
 print("Environment:", environment)
 
 wordle_games = []
+
+temp_messages = []
 
 base_path = ""
 
@@ -46,11 +48,6 @@ async def on_message(message: discord.Message):
 
 @bot.event
 async def on_message_delete(message: discord.Message):
-    if environment == "production":
-        modlog_channel = bot.get_channel(701710310121275474)
-    elif environment == "development":
-        modlog_channel = bot.get_channel(1131571647665672262)
-
     # Check that author is not Dune bot
     if message.author.id == 1064478983095332864:
         return
@@ -59,15 +56,15 @@ async def on_message_delete(message: discord.Message):
     if message.author.roles is not None:
         if message.author.roles[0].id == 701709720410652762: 
             return
-    
-    if message.author.global_name != message.author.display_name and message.author.display_name != None:
-        name = f"{message.author.global_name} aka {message.author.display_name}"
-    else:
-        name = f"{message.author.global_name}"
 
-    await modlog_channel.send(f"Message deleted in {message.channel.mention}:\n{name} sent: {message.content}", allowed_mentions=discord.AllowedMentions.none())
-    for attachment in message.attachments:
-        await modlog_channel.send(attachment)
+    timestamped_msg = {
+        "message": message,
+        "timestamp": datetime.now()
+    }
+
+    temp_messages.append(timestamped_msg)
+
+    return
 
 @bot.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
@@ -105,6 +102,42 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     discord_embed.add_field(name="New Message", value=after.content, inline=False)
 
     await modlog_channel.send(embed=discord_embed, allowed_mentions=discord.AllowedMentions.none())
+
+@bot.tree.command(name="get_deleted_messages")
+@app_commands.describe(minutes="Type in the number of minutes you wish to look back.")
+async def get_deleted_messages(interaction: discord.Interaction, minutes: int):
+    deleted_messages = []
+    for temp_message in temp_messages:
+        if datetime.now() - temp_message["timestamp"] < timedelta(minutes=minutes):
+            deleted_messages.append(temp_message)
+    
+    if len(deleted_messages) == 0:
+        await interaction.response.send_message("No deleted messages found", ephemeral=True)
+        return
+    
+    if environment == "production":
+        modlog_channel = bot.get_channel(701710310121275474) 
+    elif environment == "development":
+        modlog_channel = bot.get_channel(1131571647665672262)
+    
+    for temp_message in deleted_messages:
+        message: discord.Message = temp_message["message"]
+        description = f"Message deleted in {message.channel.mention}"
+        color = discord.Colour.gold()
+        name = message.author.display_name
+        icon_url = message.author.avatar.url
+
+        discord_embed = discord.Embed(color=color, description=description)
+        discord_embed.set_author(name=name, icon_url=icon_url)
+
+        discord_embed.add_field(name="Message", value=message.content, inline=False)
+    
+        await modlog_channel.send(embed=discord_embed, allowed_mentions=discord.AllowedMentions.none())
+        for attachment in message.attachments:
+            await modlog_channel.send(attachment)
+    
+    await interaction.response.send_message(f"{len(deleted_messages)} messages found. View in {modlog_channel.mention}", ephemeral=True)
+    return
 
 
 async def check_spoiler(message):
@@ -174,11 +207,25 @@ async def update_presence():
 
     activity = discord.CustomActivity(name=days_until_string)
     await bot.change_presence(activity=activity)
+
+async def check_temp_msg_list():
+    counter = 0
+    for temp_message in temp_messages:
+        if datetime.now() - temp_message["timestamp"] > timedelta(minutes=600):
+            temp_messages.remove(temp_message)
+            counter += 1
+    print(counter + " messages removed from storage.")
+    return
     
 
 @tasks.loop(hours=24)
 async def update_presence_task():
     await update_presence()
+    
+
+@tasks.loop(hours=1)
+async def check_temp_msg_list_task():
+    await check_temp_msg_list()
 
 async def get_days_until_string(target_date_str, time_str):
     # Get the current date
@@ -306,10 +353,6 @@ async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str
     modified_img_file = discord.File(modified_img_io, filename="meme.png")
 
     await interaction.followup.send(file=modified_img_file)
-
-
-
-
 
 
 # Command that fetches the profile picture of a user and sends it as a message
