@@ -22,7 +22,8 @@ print("Environment:", environment)
 
 wordle_games = []
 
-temp_messages = []
+deleted_messages = []
+edited_messages = []
 
 base_path = ""
 
@@ -62,17 +63,12 @@ async def on_message_delete(message: discord.Message):
         "timestamp": datetime.now()
     }
 
-    temp_messages.append(timestamped_msg)
+    deleted_messages.append(timestamped_msg)
 
     return
 
 @bot.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
-    if environment == "production":
-        modlog_channel = bot.get_channel(701710310121275474) 
-    elif environment == "development":
-        modlog_channel = bot.get_channel(1131571647665672262)
-
     # Check that author is not Dune bot and check that authors first role is not Thinking Machine
     if before.author.id == 1064478983095332864:
         return
@@ -84,34 +80,25 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     if before.content == after.content:
         return
     
-        if before.author.global_name != before.author.display_name:
-            name = f"{before.author.global_name} aka {before.author.display_name}"
-        else:
-            name = f"{before.author.global_name}"
-        await modlog_channel.send(f"Message {after.jump_url} edited from \n{before.content} \nto \n{after.content}")
+    timestamped_msg = {
+        "before": before,
+        "after": after,
+        "timestamp": datetime.now()
+    }
     
-    description = f"Message edited in {before.jump_url}"
-    color = discord.Colour.gold()
-    name = after.author.display_name
-    icon_url = after.author.avatar.url
+    edited_messages.append(timestamped_msg)
+    return
 
-    discord_embed = discord.Embed(color=color, description=description)
-    discord_embed.set_author(name=name, icon_url=icon_url)
-
-    discord_embed.add_field(name="Old Message", value=before.content, inline=False)
-    discord_embed.add_field(name="New Message", value=after.content, inline=False)
-
-    await modlog_channel.send(embed=discord_embed, allowed_mentions=discord.AllowedMentions.none())
 
 @bot.tree.command(name="get_deleted_messages")
 @app_commands.describe(minutes="Type in the number of minutes you wish to look back.")
 async def get_deleted_messages(interaction: discord.Interaction, minutes: int):
-    deleted_messages = []
-    for temp_message in temp_messages:
-        if datetime.now() - temp_message["timestamp"] < timedelta(minutes=minutes):
-            deleted_messages.append(temp_message)
+    found_messages = []
+    for deleted_message in deleted_messages:
+        if datetime.now() - deleted_message["timestamp"] < timedelta(minutes=minutes):
+            found_messages.append(deleted_message)
     
-    if len(deleted_messages) == 0:
+    if len(found_messages) == 0:
         await interaction.response.send_message("No deleted messages found", ephemeral=True)
         return
     
@@ -120,8 +107,8 @@ async def get_deleted_messages(interaction: discord.Interaction, minutes: int):
     elif environment == "development":
         modlog_channel = bot.get_channel(1131571647665672262)
     
-    for temp_message in deleted_messages:
-        message: discord.Message = temp_message["message"]
+    for found_message in found_messages:
+        message: discord.Message = found_message["message"]
         description = f"Message deleted in {message.channel.mention}"
         color = discord.Colour.gold()
         name = message.author.display_name
@@ -136,7 +123,43 @@ async def get_deleted_messages(interaction: discord.Interaction, minutes: int):
         for attachment in message.attachments:
             await modlog_channel.send(attachment)
     
-    await interaction.response.send_message(f"{len(deleted_messages)} messages found. View in {modlog_channel.mention}", ephemeral=True)
+    await interaction.response.send_message(f"{len(found_messages)} messages found. View in {modlog_channel.mention}", ephemeral=True)
+    return
+
+@bot.tree.command(name="get_edited_messages")
+@app_commands.describe(minutes="Type in the number of minutes you wish to look back.")
+async def get_edited_messages(interaction: discord.Interaction, minutes: int):
+    found_messages = []
+    for edited_message in edited_messages:
+        if datetime.now() - edited_message["timestamp"] < timedelta(minutes=minutes):
+            found_messages.append(edited_message)
+    
+    if len(edited_messages) == 0:
+        await interaction.response.send_message("No edited messages found", ephemeral=True)
+        return
+    
+    if environment == "production":
+        modlog_channel = bot.get_channel(701710310121275474) 
+    elif environment == "development":
+        modlog_channel = bot.get_channel(1131571647665672262)
+    
+    for found_message in found_messages:
+        before: discord.Message = found_message["before"]
+        after: discord.Message = found_message["after"]
+        description = f"Message edited in {before.channel.mention}"
+        color = discord.Colour.gold()
+        name = before.author.display_name
+        icon_url = before.author.avatar.url
+
+        discord_embed = discord.Embed(color=color, description=description)
+        discord_embed.set_author(name=name, icon_url=icon_url)
+
+        discord_embed.add_field(name="Old Message", value=before.content, inline=False)
+        discord_embed.add_field(name="New Message", value=after.content, inline=False)
+    
+        await modlog_channel.send(embed=discord_embed, allowed_mentions=discord.AllowedMentions.none())
+    
+    await interaction.response.send_message(f"{len(found_messages)} messages found. View in {modlog_channel.mention}", ephemeral=True)
     return
 
 
@@ -210,9 +233,13 @@ async def update_presence():
 
 async def check_temp_msg_list():
     counter = 0
-    for temp_message in temp_messages:
-        if datetime.now() - temp_message["timestamp"] > timedelta(minutes=600):
-            temp_messages.remove(temp_message)
+    for deleted_message in deleted_messages:
+        if datetime.now() - deleted_message["timestamp"] > timedelta(minutes=600):
+            deleted_messages.remove(deleted_message)
+            counter += 1
+    for edited_messages in edited_messages:
+        if datetime.now() - deleted_message["timestamp"] > timedelta(minutes=600):
+            edited_messages.remove(deleted_message)
             counter += 1
     print(counter + " messages removed from storage.")
     return
