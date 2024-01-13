@@ -755,18 +755,24 @@ async def book(interaction: discord.Interaction, book_title: str):
 async def search_in_dune(interaction: discord.Interaction, search_term: str):
     await interaction.response.defer()
 
+    if len(search_term) < 4:
+        await interaction.followup.send("Search term must be at least 4 characters long")
+        return
+
     from media_fetcher import search_in_dune
 
     result = search_in_dune(search_term)
 
-    if len(result) == 0:
+    if result is None:
         await interaction.followup.send("No results found")
         return
     
+    result = result.replace(search_term, f"***{search_term}***")
+    
     embed = discord.Embed(title="Search results", color=discord.Colour.dark_gold())
 
-    for item in result:
-        embed.add_field(name=item[0], value=item[1], inline=False)
+    
+    embed.add_field(name="Found in", value=result, inline=False)
     
     await interaction.followup.send(embed=embed)
 

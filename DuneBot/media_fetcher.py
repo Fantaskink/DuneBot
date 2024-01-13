@@ -116,9 +116,9 @@ def search_in_dune(search_term):
 
         for line in text:
             if search_term.lower() in line:
-                results.append(line)
+                return line
     
-    return results
+    return None
     
 
 #print(fetch_movie_data('Birdman', '2014'))
