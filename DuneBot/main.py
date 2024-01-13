@@ -767,7 +767,7 @@ async def search_in_dune(interaction: discord.Interaction, search_term: str):
         await interaction.followup.send("No results found")
         return
     
-    result = result.replace(search_term, f"***{search_term}***")
+    result = re.sub(f'({search_term})', r'***\1***', result, flags=re.IGNORECASE)
     
     embed = discord.Embed(title="Search results", color=discord.Colour.dark_gold())
 
