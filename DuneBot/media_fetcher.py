@@ -115,7 +115,7 @@ def search_in_dune(search_term):
         text = [para.get_text() for para in soup.find_all('p')]
 
         for line in text:
-            if search_term.lower() in line:
+            if search_term.lower() in line.lower():
                 return line
     
     return None
