@@ -748,6 +748,28 @@ async def book(interaction: discord.Interaction, book_title: str):
     discord_embed.add_field(name='Rating', value=rating, inline=True)
 
     await interaction.followup.send(embed=discord_embed)
+
+
+@bot.tree.command(name="search_in_dune")
+@app_commands.describe(search_term="Type in the string you wish to search for.")
+async def search_in_dune(interaction: discord.Interaction, search_term: str):
+    await interaction.response.defer()
+
+    from media_fetcher import search_in_dune
+
+    result = search_in_dune(search_term)
+
+    if len(result) == 0:
+        await interaction.followup.send("No results found")
+        return
+    
+    embed = discord.Embed(title="Search results", color=discord.Colour.dark_gold())
+
+    for item in result:
+        embed.add_field(name=item[0], value=item[1], inline=False)
+    
+    await interaction.followup.send(embed=embed)
+
 '''
 
 # Set up subreddit streaming in specific channel

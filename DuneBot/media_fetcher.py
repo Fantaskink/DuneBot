@@ -1,6 +1,8 @@
 import requests
 import os 
 from bs4 import BeautifulSoup
+import ebooklib
+from ebooklib import epub
 import urllib.parse
 from dotenv import load_dotenv, find_dotenv
 
@@ -33,9 +35,7 @@ def fetch_movie_data(movie_title, year):
             print("Error: ", data['Error'])
             return None
 
-    except requests.RequestException as e:
-        # Handle connection errors
-        print("Request Exception:", e)
+    except Exception as e:
         return None
 
 
@@ -74,7 +74,6 @@ def fetch_book_data(query):
         return None
 
 
-
 def search_title_on_goodreads(query):
     query = urllib.parse.quote_plus(query)
     search_url = f'https://www.goodreads.com/search?utf8=✓&q={query}&search_type=books&search%5Bfield%5D=on'
@@ -94,6 +93,34 @@ def search_title_on_goodreads(query):
     except Exception as e:
         print("Exception:", e)
         return None
+    
+
+def search_in_dune(search_term):
+    environment = os.environ.get("ENVIRONMENT")
+    base_path = ""
+
+    if environment == "production":
+        base_path = '/home/ubuntu/DuneBot/DuneBot/'
+    elif environment == "development":
+        base_path = 'DuneBot/'
+
+    book_path = f"{base_path}book/dune.epub"
+
+    book = epub.read_epub(book_path)
+
+    results = []
+
+    for item_id, item in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT)):
+        soup = BeautifulSoup(item.get_body_content(), 'html.parser')
+        text = [para.get_text() for para in soup.find_all('p')]
+
+        for line in text:
+            if search_term.lower() in line:
+                results.append(line)
+    
+    return results
+    
 
 #print(fetch_movie_data('Birdman', '2014'))
 #print(fetch_book_data('earthsea'))
+#get_book_quote('among us')
