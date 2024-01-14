@@ -95,7 +95,7 @@ def search_title_on_goodreads(query):
         return None
     
 
-def search_in_dune(search_term):
+def search_in_book(search_term):
     environment = os.environ.get("ENVIRONMENT")
     base_path = ""
 
@@ -104,7 +104,7 @@ def search_in_dune(search_term):
     elif environment == "development":
         base_path = 'DuneBot/'
 
-    book_path = f"{base_path}book/dune.epub"
+    book_path = f"{base_path}book/dune_1.epub"
 
     book = epub.read_epub(book_path)
 
@@ -115,6 +115,33 @@ def search_in_dune(search_term):
         text = [para.get_text() for para in soup.find_all('p')]
 
         for line in text:
+            print(line)
+            if search_term.lower() in line.lower():
+                return line
+    
+    return None
+
+def search_in_dune_messiah(search_term):
+    environment = os.environ.get("ENVIRONMENT")
+    base_path = ""
+
+    if environment == "production":
+        base_path = '/home/ubuntu/DuneBot/DuneBot/'
+    elif environment == "development":
+        base_path = 'DuneBot/'
+
+    book_path = f"{base_path}book/dune_2.epub"
+
+    book = epub.read_epub(book_path)
+
+    results = []
+
+    for item_id, item in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT)):
+        soup = BeautifulSoup(item.get_body_content(), 'html.parser')
+
+        text = [para.get_text() for para in soup.find_all('div')]
+
+        for line in text:
             if search_term.lower() in line.lower():
                 return line
     
@@ -123,4 +150,4 @@ def search_in_dune(search_term):
 
 #print(fetch_movie_data('Birdman', '2014'))
 #print(fetch_book_data('earthsea'))
-#get_book_quote('among us')
+#print(search_in_dune_messiah('among us'))

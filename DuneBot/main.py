@@ -755,13 +755,20 @@ async def book(interaction: discord.Interaction, book_title: str):
 async def search_in_dune(interaction: discord.Interaction, search_term: str):
     await interaction.response.defer()
 
-    if len(search_term) < 4:
-        await interaction.followup.send("Search term must be at least 4 characters long")
+    if len(search_term) < 3:
+        await interaction.followup.send("Search term must be at least 3 characters long")
         return
 
-    from media_fetcher import search_in_dune
+    from media_fetcher import search_in_book, search_in_dune_messiah
 
-    result = search_in_dune(search_term)
+    index = 0
+
+    result = search_in_book(search_term)
+    index = 1
+
+    if result is None:
+        result = search_in_dune_messiah(search_term)
+        index = 2
 
     if result is None:
         await interaction.followup.send("No results found")
@@ -771,8 +778,21 @@ async def search_in_dune(interaction: discord.Interaction, search_term: str):
     
     embed = discord.Embed(title="Search results", color=discord.Colour.dark_gold())
 
-    
-    embed.add_field(name="Found in", value=result, inline=False)
+    match (index):
+        case (1):
+            embed.add_field(name="Found in", value="Dune", inline=False)
+        case (2):
+            embed.add_field(name="Found in", value="Dune Messiah", inline=False)
+        case (3):
+            embed.add_field(name="Found in", value="Children of Dune", inline=False)
+        case (4):
+            embed.add_field(name="Found in", value="God Emperor of Dune", inline=False)
+        case (5):
+            embed.add_field(name="Found in", value="Heretics of Dune", inline=False)
+        case (6):
+            embed.add_field(name="Found in", value="Chapterhouse Dune", inline=False)
+        case (_):
+            embed.add_field(name="Found in", value="Unknown", inline=False)
     
     await interaction.followup.send(embed=embed)
 
