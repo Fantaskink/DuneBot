@@ -774,6 +774,8 @@ async def search_in_dune(interaction: discord.Interaction, search_term: str):
         await interaction.followup.send("No results found")
         return
     
+    print(result)
+    
     result = re.sub(f'({search_term})', r'***\1***', result, flags=re.IGNORECASE)
     
     embed = discord.Embed(title="Search results", color=discord.Colour.dark_gold())
@@ -793,6 +795,8 @@ async def search_in_dune(interaction: discord.Interaction, search_term: str):
             embed.add_field(name="Found in", value="Chapterhouse Dune", inline=False)
         case (_):
             embed.add_field(name="Found in", value="Unknown", inline=False)
+    
+    embed.add_field(name="Excerpt", value=result, inline=False)
     
     await interaction.followup.send(embed=embed)
 
