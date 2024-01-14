@@ -759,22 +759,24 @@ async def search_in_dune(interaction: discord.Interaction, search_term: str):
         await interaction.followup.send("Search term must be at least 3 characters long")
         return
 
-    from media_fetcher import search_in_book, search_in_dune_messiah
+    from media_fetcher import search_in_epub_with_p, search_in_epub_with_div
 
-    index = 0
-
-    result = search_in_book(search_term)
     index = 1
 
+    result = search_in_epub_with_p(search_term, index)
+
     if result is None:
-        result = search_in_dune_messiah(search_term)
         index = 2
+        result = search_in_epub_with_div(search_term, index)
+    
+    if result is None:
+        index = 3
+        result = search_in_epub_with_div(search_term, index)
+        
 
     if result is None:
         await interaction.followup.send("No results found")
         return
-    
-    print(result)
     
     result = re.sub(f'({search_term})', r'***\1***', result, flags=re.IGNORECASE)
     
