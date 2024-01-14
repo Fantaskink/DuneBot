@@ -115,7 +115,6 @@ def search_in_book(search_term):
         text = [para.get_text() for para in soup.find_all('p')]
 
         for line in text:
-            print(line)
             if search_term.lower() in line.lower():
                 return line
     
