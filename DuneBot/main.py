@@ -770,7 +770,7 @@ async def search_in_dune(interaction: discord.Interaction, search_term: str):
         result = search_in_epub_with_div(search_term, index)
 
     if result is None:
-        for i in range(3, 4):
+        for i in range(3, 5):
             if result is None:
                 index = i
                 result = search_in_epub_with_p(search_term, index)
