@@ -805,7 +805,10 @@ async def search_in_dune(interaction: discord.Interaction, search_term: str):
         case (_):
             embed.add_field(name="Found in", value="Unknown", inline=False)
     
-    embed.add_field(name="Excerpt", value=result, inline=False)
+    if index == 1:
+        embed.add_field(name="Excerpt", value=result, inline=False)
+    else:
+        embed.add_field(name="Excerpt", value=f"||{result}||", inline=False)
     
     await interaction.followup.send(embed=embed)
 
