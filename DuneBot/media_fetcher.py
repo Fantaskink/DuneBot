@@ -101,26 +101,9 @@ def search_title_on_goodreads(query):
     except Exception as e:
         print("Exception:", e)
         return None
-    
 
-def search_in_epub_with_p(search_term, index):
-    book_path = f"{base_path}book/dune_{index}.epub"
 
-    book = epub.read_epub(book_path)
-
-    results = []
-
-    for item_id, item in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT)):
-        soup = BeautifulSoup(item.get_body_content(), 'html.parser')
-        text = [para.get_text() for para in soup.find_all('p')]
-
-        for line in text:
-            if search_term.lower() in line.lower():
-                return line
-    
-    return None
-
-def search_in_epub_with_div(search_term, index):
+def search_in_epub_with_element(search_term, index, element):
     book_path = f"{base_path}book/dune_{index}.epub"
 
     book = epub.read_epub(book_path)
@@ -130,12 +113,15 @@ def search_in_epub_with_div(search_term, index):
     for item_id, item in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT)):
         soup = BeautifulSoup(item.get_body_content(), 'html.parser')
 
-        text = [para.get_text() for para in soup.find_all('div')]
+        text = [para.get_text() for para in soup.find_all(element)]
 
         for line in text:
             if search_term.lower() in line.lower():
-                return line
+                results.append({"results":line, "book_number":index})
     
-    return None
+    if results:
+        return results
+    else:
+        return None
 
-#print(search_in_epub_with_p("dune", 4))
+#print(search_in_epub_with_element("beefswelling", 3, "p"))
