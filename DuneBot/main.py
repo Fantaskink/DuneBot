@@ -820,6 +820,10 @@ class SearchResultView(discord.ui.View):
             self.last_page_button.disabled = False
             self.last_page_button.style = discord.ButtonStyle.green
             self.next_button.style = discord.ButtonStyle.primary
+    
+    async def on_timeout(self):
+        self.clear_items()
+        self.stop()
 
 
     @discord.ui.button(label="|<", style=discord.ButtonStyle.primary)
