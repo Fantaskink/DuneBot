@@ -776,7 +776,7 @@ class SearchResultView(discord.ui.View):
         self.data = data
         self.search_term = search_term
         self.current_page = 1
-        self.timeout = 200
+        self.timeout = 600
     
     async def send(self, interaction: discord.Interaction):
         self.message = await interaction.followup.send(view=self)
@@ -822,8 +822,14 @@ class SearchResultView(discord.ui.View):
             self.next_button.style = discord.ButtonStyle.primary
     
     async def on_timeout(self):
+        self.first_page_button.disabled = True
+        self.prev_button.disabled = True
+        self.next_button.disabled = True
+        self.last_page_button.disabled = True
         self.clear_items()
         self.stop()
+
+        await self.update_message(self.data[self.current_page - 1])
 
 
     @discord.ui.button(label="|<", style=discord.ButtonStyle.primary)
