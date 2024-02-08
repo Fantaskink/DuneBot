@@ -380,7 +380,7 @@ async def add_leak_keyword(interaction: discord.Interaction, keyword: str):
     with open(file_path, 'a') as csv_file:
             csv_file.write(keyword + ",\n")
     
-    await interaction.response.send_message(f"Keyword: {keyword} added.")
+    await interaction.response.send_message(f"Keyword: {keyword} added.", ephemeral=True)
 
 
 @bot.tree.command(name="delete_spoiler_keyword")
