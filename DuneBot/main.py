@@ -48,6 +48,7 @@ async def on_ready():
 @bot.event
 async def on_message(message: discord.Message):
     await check_spoiler(message)
+    await check_leak(message)
 
 @bot.event
 async def on_message_delete(message: discord.Message):
@@ -165,7 +166,7 @@ async def get_edited_messages(interaction: discord.Interaction, minutes: int):
     return
 
 
-async def check_spoiler(message):
+async def check_spoiler(message: discord.Message):
     # Ignore messages from the bot itself to prevent potential loops
     if message.author == bot.user:
         return
@@ -206,9 +207,51 @@ async def check_spoiler(message):
     # Allow other event listeners (commands, etc.) to continue functioning
     await bot.process_commands(message)
 
+async def check_leak(message):
+    # Ignore messages from the bot itself to prevent potential loops
+    if message.author == bot.user:
+        return
+    
+    # List of keywords to look for
+    keywords = await get_leak_keywords()
+    
+    if environment == "production":
+        modlog_channel = bot.get_channel(701710310121275474)
+        channel_ids = [702085230051328020, 864413789562470421, 1205108102370955264] 
+    elif environment == "development":
+        modlog_channel = bot.get_channel(1131571647665672262)
+        channel_ids = [1205129588028473404] #test channel
+    
+    # Check if the message is not in a leak channel
+    if message.channel.id not in channel_ids:
+            # Process the message for keywords
+            for keyword in keywords:
+                if keyword.lower() in message.content.lower():
+                    await message.reply(f"Do not post leaked details in this channel.")
+                    await message.delete()
+                    #await modlog_channel.send(f"Spoiler reminder sent in {message.channel.mention}, triggered by keyword: {keyword}.\nJump to message: {message.jump_url}")
+                    break
+        
+
+    # Allow other event listeners (commands, etc.) to continue functioning
+    await bot.process_commands(message)
+
 
 async def get_spoiler_keywords():
     file_path = base_path + 'csv/keywords.csv'
+    keywords = []
+
+    with open(file_path, 'r', newline='') as csvfile:
+        csv_reader = csv.reader(csvfile, skipinitialspace=False)
+
+        for row in csv_reader:
+            if row:
+                keywords.append(row[0])
+    return keywords
+
+
+async def get_leak_keywords():
+    file_path = base_path + 'csv/leak_words.csv'
     keywords = []
 
     with open(file_path, 'r', newline='') as csvfile:
@@ -294,6 +337,20 @@ async def print_spoiler_keywords(interaction: discord.Interaction):
 
     await interaction.response.send_message("```" + keyword_string + "```")
 
+@bot.tree.command(name="print_leak_keywords")
+@app_commands.describe()
+async def print_leak_keywords(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+
+    keywords = await get_leak_keywords()
+    keyword_string = ""
+    for keyword in keywords:
+        keyword_string = keyword_string + (str(keywords.index(keyword)) + ":" + keyword + "\n")
+
+    await interaction.response.send_message("```" + keyword_string + "```", ephemeral=True)
+
 
 @bot.tree.command(name="add_spoiler_keyword")
 @app_commands.describe(keyword="Type in a keyword you wish to be considered a spoiler.")
@@ -310,6 +367,22 @@ async def add_spoiler_keyword(interaction: discord.Interaction, keyword: str):
     
     await interaction.response.send_message(f"Keyword: {keyword} added.")
 
+@bot.tree.command(name="add_leak_keyword")
+@app_commands.describe(keyword="Type in a keyword you wish to be considered a leak.")
+async def add_leak_keyword(interaction: discord.Interaction, keyword: str):
+
+    if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+    
+    file_path = base_path + 'csv/leak_words.csv'
+
+    with open(file_path, 'a') as csv_file:
+            csv_file.write(keyword + ",\n")
+    
+    await interaction.response.send_message(f"Keyword: {keyword} added.")
+
+
 @bot.tree.command(name="delete_spoiler_keyword")
 @app_commands.describe(index="Type in the index of the spoiler keyword you wish to remove.")
 async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
@@ -319,6 +392,35 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
         return
 
     file_path = base_path + 'csv/keywords.csv'
+
+    with open(file_path, 'r', newline='') as csv_file:
+        reader = csv.reader(csv_file)
+        data = list(reader)
+
+    # Check if the row_index is valid
+    if index < 0 or index >= len(data):
+        await interaction.response.send_message("Invalid index", ephemeral=True)
+        return
+    
+    # Remove the desired row
+    data.pop(index)
+
+    # Write the modified data back to the CSV file
+    with open(file_path, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(data)
+    
+    await interaction.response.send_message(f"Keyword removed.")
+
+@bot.tree.command(name="delete_leak_keyword")
+@app_commands.describe(index="Type in the index of the leak keyword you wish to remove.")
+async def delete_leak_keyword(interaction: discord.Interaction, index: int):
+
+    if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+
+    file_path = base_path + 'csv/leak_words.csv'
 
     with open(file_path, 'r', newline='') as csv_file:
         reader = csv.reader(csv_file)
