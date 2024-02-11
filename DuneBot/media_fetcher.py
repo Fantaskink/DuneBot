@@ -117,6 +117,8 @@ def search_in_epub_with_element(search_term, index, element):
 
         for line in text:
             if search_term.lower() in line.lower():
+                if len(line) > 1024:
+                    line = line[:1010] + "..."
                 results.append({"results":line, "book_number":index})
     
     if results:

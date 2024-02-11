@@ -498,6 +498,7 @@ async def pfp(interaction: discord.Interaction, user: discord.User):
 @app_commands.describe(message="Type in the message you wish the bot to say.", message_id="Type in the id of the message you wish the bot to reply to.")
 async def say(interaction: discord.Interaction, message: str, message_id: str = None):
     if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
         return
     
     await interaction.response.send_message("Alright boss", ephemeral=True)
