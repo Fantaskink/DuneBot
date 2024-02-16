@@ -37,6 +37,8 @@ elif environment == "development":
 @bot.event
 async def on_ready():
     update_presence_task.start()
+    #handle_boosters_task.start()
+    check_temp_msg_list_task.start()
 
     print(f'{bot.user} is now running.')
     try:
@@ -282,11 +284,11 @@ async def check_temp_msg_list():
         if datetime.now() - deleted_message["timestamp"] > timedelta(minutes=600):
             deleted_messages.remove(deleted_message)
             counter += 1
-    for edited_messages in edited_messages:
-        if datetime.now() - deleted_message["timestamp"] > timedelta(minutes=600):
-            edited_messages.remove(deleted_message)
+    for edited_message in edited_messages:
+        if datetime.now() - edited_message["timestamp"] > timedelta(minutes=600):
+            edited_messages.remove(edited_message)
             counter += 1
-    print(counter + " messages removed from storage.")
+    print(f"{counter} cached messages removed from memory.")
     return
     
 
@@ -294,6 +296,10 @@ async def check_temp_msg_list():
 async def update_presence_task():
     await update_presence()
     
+
+@tasks.loop(hours=12)
+async def handle_boosters_task():
+    await handle_boosters()
 
 @tasks.loop(hours=1)
 async def check_temp_msg_list_task():
@@ -999,6 +1005,171 @@ async def search_in_dune(interaction: discord.Interaction, search_term: str):
     search_view = SearchResultView(flattened_results, search_term)
 
     await search_view.send(interaction)
+
+
+async def is_new_booster(user_id):
+    file_path = base_path + 'csv/boosters.csv'
+
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        print("File is empty or doesn't exist")
+        return True
+    
+    with open(file_path, 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+
+        for row in csv_reader:
+            if row[0] == user_id:
+                return False
+
+        return True
+
+
+async def write_booster_to_csv(user_id, role_id):
+    with open(base_path + 'csv/boosters.csv', 'a') as booster_file:
+        csv_writer = csv.writer(booster_file)
+
+        # user_id, role_id, is_currently_boosting
+        csv_writer.writerow([user_id, role_id, True])
+    return
+
+
+async def get_booster_role_id(user_id):
+    file_path = base_path + 'csv/boosters.csv'
+
+    with open(file_path, 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+
+        for row in csv_reader:
+            if row[0] == user_id:
+                return row[1]
+        return None
+
+async def get_booster_ids():
+    file_path = base_path + 'csv/boosters.csv'
+    booster_ids = []
+
+    with open(file_path, 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+
+        for row in csv_reader:
+            booster_ids.append(row[0])
+    return booster_ids
+
+async def set_booster_status(user_id, status): # True if boosting, False if not
+    file_path = base_path + 'csv/boosters.csv'
+
+    with open(file_path, 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+        lines = list(csv_reader)
+        for i in range(len(lines)):
+            if lines[i][0] == user_id:
+                lines[i][2] = status
+    
+    with open(file_path, 'w') as stats_file:
+        csv_writer = csv.writer(stats_file)
+        csv_writer.writerows(lines)
+
+async def is_active_booster(user_id):
+    file_path = base_path + 'csv/boosters.csv'
+
+    with open(file_path, 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+
+        for row in csv_reader:
+            if row[0] == user_id:
+                return row[2]
+        return False
+
+@bot.tree.command(name="get_booster_role")
+@app_commands.describe(role_name="Type in the name of the role you wish to create.", hex_code="Type in the hex code of the color you wish the role to be.")
+async def get_booster_role(interaction: discord.Interaction, role_name: str, hex_code: str):
+    print(role_name, hex_code)
+    # Terminate if the color is not a valid hex code
+    if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', hex_code):
+        await interaction.response.send_message("Hex code must be in format #xxxxxx", ephemeral=True)
+        return
+    
+    # Terminate if the user is not a server booster
+    if interaction.user.premium_since is None:
+        await interaction.response.send_message("You must be a server booster to run this command.", ephemeral=True)
+        return
+    
+    # Convert the hex code to an integer
+    role_color = discord.Colour(int(hex_code.replace("#", ""), 16))
+
+
+    if await is_new_booster(str(interaction.user.id)):
+        # Create the role
+        guild = interaction.guild
+        booster_role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
+
+        # Add the role to the user
+        await interaction.user.add_roles(booster_role, reason="Booster role")
+
+        # Write first time server booster to CSV
+        role_id = booster_role.id
+        await write_booster_to_csv(str(interaction.user.id), role_id)
+        await interaction.response.send_message("Booster role assigned", ephemeral=True)
+    else:
+        # Get role id for existing server booster
+        role_id = await get_booster_role_id(str(interaction.user.id))
+        booster_role = discord.utils.get(interaction.guild.roles, id=int(role_id))
+
+        booster_role: discord.Role
+
+        await booster_role.edit(name=role_name, color=role_color)
+
+        await interaction.response.send_message("Booster role updated", ephemeral=True)
+
+
+async def handle_boosters():
+    booster_ids = await get_booster_ids()
+
+    for user_id in booster_ids:
+        user = bot.get_user(int(user_id))
+        user: discord.Member
+
+        # If user has left the server, do nothing
+        if user is None:
+            break
+        
+        # In cases where a user's boost has run out
+        if user.premium_since is None:
+            role_id = await get_booster_role_id(id)
+            guild = bot.guilds[0]
+            role = discord.utils.get(guild.roles, id=int(role_id))
+
+            user.remove_roles(role, reason="Booster role")
+
+            await set_booster_status(id, False)
+        
+        # In cases where the user is a server booster but the bot is not aware of it -
+        # i.e., their status is set to false in the csv file
+        if await is_active_booster(id) == "False" and user.premium_since is not None:
+            role_id = await get_booster_role_id(user_id)
+            guild = bot.guilds[0]
+            role = discord.utils.get(guild.roles, id=int(role_id))
+
+            user.add_roles(role, reason="Booster role")
+
+            await set_booster_status(id, True)
+
+@bot.tree.command(name="get_boosters")
+@app_commands.describe()
+async def get_boosters(interaction: discord.Interaction):
+    guild = bot.guilds[0]
+
+    users = []
+    for user in guild.members:
+        if user.premium_since is not None:
+            users.append(user.display_name)
+    
+    await interaction.response.send_message("Server boosters: " + ", ".join(users), ephemeral=True)
+
+#async def save_existing_booster_roles():
+    #guild = bot.guilds[0]
+    
+    #for member in guild.members: 
 '''
 
 # Set up subreddit streaming in specific channel
