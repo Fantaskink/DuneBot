@@ -1161,7 +1161,7 @@ async def get_boosters(interaction: discord.Interaction):
     users = []
 
     for member in interaction.guild.premium_subscribers:
-        users.append(member.display_name)
+        users.append(member)
     
     await interaction.response.send_message("Server boosters: " + ", ".join(users), ephemeral=True)
 
