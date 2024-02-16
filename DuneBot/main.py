@@ -1159,7 +1159,7 @@ async def handle_boosters():
 async def get_boosters(interaction: discord.Interaction):
     users = []
     for member in interaction.guild.premium_subscribers:
-        users.append(member)
+        users.append(member.display_name)
     await interaction.response.send_message("Server boosters: " + ", ".join(users), ephemeral=True)
 
 #async def save_existing_booster_roles():
