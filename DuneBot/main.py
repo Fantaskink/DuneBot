@@ -1157,11 +1157,10 @@ async def handle_boosters():
 @bot.tree.command(name="get_boosters")
 @app_commands.describe()
 async def get_boosters(interaction: discord.Interaction):
-    guild = bot.guilds[0]
 
     users = []
 
-    for member in guild.premium_subscribers:
+    for member in interaction.guild.premium_subscribers:
         users.append(member.display_name)
     
     await interaction.response.send_message("Server boosters: " + ", ".join(users), ephemeral=True)
