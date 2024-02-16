@@ -13,7 +13,7 @@ from wordlegame import wordle_game
 
 load_dotenv(find_dotenv())
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.message_content = True
 
 global bot
@@ -1157,12 +1157,9 @@ async def handle_boosters():
 @bot.tree.command(name="get_boosters")
 @app_commands.describe()
 async def get_boosters(interaction: discord.Interaction):
-
     users = []
-
     for member in interaction.guild.premium_subscribers:
         users.append(member)
-    
     await interaction.response.send_message("Server boosters: " + ", ".join(users), ephemeral=True)
 
 #async def save_existing_booster_roles():
