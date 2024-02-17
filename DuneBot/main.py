@@ -1097,7 +1097,6 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
     # Convert the hex code to an integer
     role_color = discord.Colour(int(hex_code.replace("#", ""), 16))
 
-
     if await is_new_booster(str(interaction.user.id)):
         # Create the role
         guild = interaction.guild
@@ -1124,6 +1123,7 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
 
 async def handle_boosters():
     booster_ids = await get_booster_ids()
+    boosters = bot.guilds[0].premium_subscribers
 
     for user_id in booster_ids:
         user = bot.get_user(int(user_id))
@@ -1134,7 +1134,7 @@ async def handle_boosters():
             break
         
         # In cases where a user's boost has run out
-        if user.premium_since is None:
+        if user not in boosters:
             role_id = await get_booster_role_id(id)
             guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
@@ -1145,7 +1145,7 @@ async def handle_boosters():
         
         # In cases where the user is a server booster but the bot is not aware of it -
         # i.e., their status is set to false in the csv file
-        if await is_active_booster(id) == "False" and user.premium_since is not None:
+        if await is_active_booster(id) == "False" and user in boosters:
             role_id = await get_booster_role_id(user_id)
             guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
@@ -1154,18 +1154,18 @@ async def handle_boosters():
 
             await set_booster_status(id, True)
 
-@bot.tree.command(name="get_boosters")
-@app_commands.describe()
-async def get_boosters(interaction: discord.Interaction):
-    users = []
-    for member in interaction.guild.premium_subscribers:
-        users.append(member.display_name)
-    await interaction.response.send_message("Server boosters: " + ", ".join(users), ephemeral=True)
 
-#async def save_existing_booster_roles():
-    #guild = bot.guilds[0]
-    
-    #for member in guild.members: 
+@bot.tree.command(name="add_existing_booster")
+@app_commands.describe(user="Type in the name of the user you wish to add as a booster.", role_id="Type in the id of the role you wish to assign to the user.")
+async def add_existing_booster(interaction: discord.Interaction, user: discord.User, role_id: int):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+    user: discord.Member
+
+    await write_booster_to_csv(str(user.id), role_id)
+    await interaction.response.send_message("Booster role assigned", ephemeral=True)
+
 '''
 
 # Set up subreddit streaming in specific channel
