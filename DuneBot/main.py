@@ -60,10 +60,14 @@ async def on_message_delete(message: discord.Message):
     if message.author.id == 1064478983095332864:
         return
     
-    # Check that author's first role is not Thinking Machine
-    if message.author.roles is not None:
-        if message.author.roles[0].id == 701709720410652762: 
-            return
+    guild = bot.guilds[0]
+    
+    author_member = guild.get_member(message.author.id)
+
+    thinking_machine_role = guild.get_role(701709720410652762)
+    
+    if thinking_machine_role in author_member.roles:
+        return
 
     timestamped_msg = {
         "message": message,
@@ -1193,16 +1197,6 @@ async def has_been_pinged(user: discord.Member):
                 return True
         return False
 
-async def update_role_pos():
-    guild = bot.guilds[0]
-    booster_ids = await get_booster_ids()
-
-    for user_id in booster_ids:
-        role_id = await get_booster_role_id(user_id)
-        role = guild.get_role(int(role_id))
-
-        await role.edit(position=50)
-
 
 @bot.tree.command(name="get_role_positions")
 @app_commands.describe(user="Type in the name of the user you wish to get the role positions for.")
@@ -1225,6 +1219,17 @@ async def get_role_positions(interaction: discord.Interaction, user: discord.Use
     await interaction.response.send_message(role_positions, ephemeral=True)
 
 '''
+
+
+async def update_role_pos():
+    guild = bot.guilds[0]
+    booster_ids = await get_booster_ids()
+
+    for user_id in booster_ids:
+        role_id = await get_booster_role_id(user_id)
+        role = guild.get_role(int(role_id))
+
+        await role.edit(position=50)
 
 @bot.tree.command(name="add_existing_booster")
 @app_commands.describe(user="Type in the name of the user you wish to add as a booster.", role_id="Type in the id of the role you wish to assign to the user.")
