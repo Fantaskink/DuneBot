@@ -1106,8 +1106,10 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
         guild = bot.guilds[0]
         booster_role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
 
+        member = guild.get_member(interaction.user.id)
+
         # Add the role to the user
-        await interaction.user.add_roles(booster_role, reason="Booster role")
+        await member.add_roles(booster_role, reason="Booster role")
 
         # Write first time server booster to CSV
         role_id = booster_role.id
