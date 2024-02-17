@@ -1103,7 +1103,7 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
 
     if await is_new_booster(str(interaction.user.id)):
         # Create the role
-        guild = interaction.guild
+        guild = bot.guilds[0]
         booster_role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
 
         # Add the role to the user
