@@ -1156,7 +1156,7 @@ async def handle_boosters():
     # Ping users that do not have a custom role and have not been pinged already
     for booster in boosters:
         booster: discord.Member
-        if not has_been_pinged(booster) and booster.id not in booster_ids:
+        if not await has_been_pinged(booster) and booster.id not in booster_ids:
             await booster.send("Thank you for boosting the server! Use /get_booster_role to set up a custom role.")
             await add_pinged_booster(booster)
 
