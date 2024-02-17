@@ -1107,7 +1107,7 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
         # Create the role
         guild = bot.guilds[0]
         booster_role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
-        await booster_role.edit(position=30)
+        await booster_role.edit(position=29)
 
         member = guild.get_member(interaction.user.id)
 
@@ -1197,7 +1197,7 @@ async def update_role_pos():
         role_id = await get_booster_role_id(user_id)
         role = guild.get_role(int(role_id))
 
-        await role.edit(position=30)
+        await role.edit(position=29)
 
 
 @bot.tree.command(name="get_role_positions")
