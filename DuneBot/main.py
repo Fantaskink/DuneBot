@@ -1089,8 +1089,14 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
         await interaction.response.send_message("Hex code must be in format #xxxxxx", ephemeral=True)
         return
     
+    guild = interaction.guild
+
+    member = guild.get_member(interaction.user.id)
+
+    boosters = guild.premium_subscribers
+    
     # Terminate if the user is not a server booster
-    if interaction.user.premium_since is None:
+    if member not in boosters:
         await interaction.response.send_message("You must be a server booster to run this command.", ephemeral=True)
         return
     
@@ -1126,7 +1132,8 @@ async def handle_boosters():
     boosters = bot.guilds[0].premium_subscribers # List of all the server's boosters
 
     for user_id in booster_ids:
-        user = bot.get_user(int(user_id))
+        user = bot.guilds[0].get_member(int(user_id))
+        
         user: discord.Member
 
         # If user has left the server, do nothing
@@ -1156,7 +1163,7 @@ async def handle_boosters():
     # Ping users that do not have a custom role and have not been pinged already
     for booster in boosters:
         booster: discord.Member
-        if not await has_been_pinged(booster) and booster.id not in booster_ids:
+        if not await has_been_pinged(booster):
             await booster.send("Thank you for boosting the server! Use /get_booster_role to set up a custom role.")
             await add_pinged_booster(booster)
 
