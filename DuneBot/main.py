@@ -37,7 +37,7 @@ elif environment == "development":
 @bot.event
 async def on_ready():
     update_presence_task.start()
-    #handle_boosters_task.start()
+    handle_boosters_task.start()
     check_temp_msg_list_task.start()
 
     print(f'{bot.user} is now running.')
@@ -1122,8 +1122,8 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
 
 
 async def handle_boosters():
-    booster_ids = await get_booster_ids()
-    boosters = bot.guilds[0].premium_subscribers
+    booster_ids = await get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
+    boosters = bot.guilds[0].premium_subscribers # List of all the server's boosters
 
     for user_id in booster_ids:
         user = bot.get_user(int(user_id))
@@ -1143,8 +1143,7 @@ async def handle_boosters():
 
             await set_booster_status(id, False)
         
-        # In cases where the user is a server booster but the bot is not aware of it -
-        # i.e., their status is set to false in the csv file
+        # If the user has previously boosted and set up a custom role and has started boosting again
         if await is_active_booster(id) == "False" and user in boosters:
             role_id = await get_booster_role_id(user_id)
             guild = bot.guilds[0]
@@ -1153,7 +1152,34 @@ async def handle_boosters():
             user.add_roles(role, reason="Booster role")
 
             await set_booster_status(id, True)
+    
+    # Ping users that do not have a custom role and have not been pinged already
+    for booster in boosters:
+        booster: discord.Member
+        if not has_been_pinged(booster) and booster.id not in booster_ids:
+            await booster.send("Thank you for boosting the server! Use /get_booster_role to set up a custom role.")
+            await add_pinged_booster(booster)
 
+
+async def add_pinged_booster(user: discord.Member):
+    filepath = base_path + 'csv/pinged_boosters.csv'
+
+    with open(filepath, 'a') as csv_file:
+        csv_file.write(str(user.id) + ",\n")
+
+
+async def has_been_pinged(user: discord.Member):
+    filepath = base_path + 'csv/pinged_boosters.csv'
+
+    with open(filepath, 'r') as csv_file:
+        csv_reader = csv.reader(csv_file)
+
+        for row in csv_reader:
+            if row[0] == str(user.id):
+                return True
+        return False
+
+'''
 
 @bot.tree.command(name="add_existing_booster")
 @app_commands.describe(user="Type in the name of the user you wish to add as a booster.", role_id="Type in the id of the role you wish to assign to the user.")
@@ -1165,8 +1191,6 @@ async def add_existing_booster(interaction: discord.Interaction, user: discord.U
 
     await write_booster_to_csv(str(user.id), role_id)
     await interaction.response.send_message("Booster role assigned", ephemeral=True)
-
-'''
 
 # Set up subreddit streaming in specific channel
 @bot.tree.command(name="stream_subreddit")
