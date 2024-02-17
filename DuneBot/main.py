@@ -1186,6 +1186,24 @@ async def has_been_pinged(user: discord.Member):
                 return True
         return False
 
+@bot.tree.command(name="get_role_positions")
+@app_commands.describe(user="Type in the name of the user whose role positions you wish to see.")
+async def get_role_positions(interaction: discord.Interaction, user: discord.User):
+    guild = bot.guilds[0]
+    member = guild.get_member(user.id)
+
+    member: discord.Member
+
+    roles = member.roles
+
+    role_positions = []
+
+    for role in roles:
+        role: discord.Role
+        role_positions.append(role.name, role.position)
+
+    await interaction.response.send_message(role_positions, ephemeral=True)
+
 '''
 
 @bot.tree.command(name="add_existing_booster")
