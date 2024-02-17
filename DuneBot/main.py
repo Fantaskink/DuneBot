@@ -40,6 +40,8 @@ async def on_ready():
     handle_boosters_task.start()
     check_temp_msg_list_task.start()
 
+    await update_role_pos()
+
     print(f'{bot.user} is now running.')
     try:
         synced = await bot.tree.sync()
@@ -1105,6 +1107,7 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
         # Create the role
         guild = bot.guilds[0]
         booster_role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
+        await booster_role.edit(position=50)
 
         member = guild.get_member(interaction.user.id)
 
@@ -1186,23 +1189,15 @@ async def has_been_pinged(user: discord.Member):
                 return True
         return False
 
-@bot.tree.command(name="get_role_positions")
-@app_commands.describe(user="Type in the name of the user whose role positions you wish to see.")
-async def get_role_positions(interaction: discord.Interaction, user: discord.User):
+async def update_role_pos():
     guild = bot.guilds[0]
-    member = guild.get_member(user.id)
+    booster_ids = await get_booster_ids()
 
-    member: discord.Member
+    for user_id in booster_ids:
+        role_id = await get_booster_role_id(user_id)
+        role = guild.get_role(int(role_id))
 
-    roles = member.roles
-
-    role_positions = []
-
-    for role in roles:
-        role: discord.Role
-        role_positions.append(f"{role.name}, {role.position}")
-
-    await interaction.response.send_message(role_positions, ephemeral=True)
+        await role.edit(position=50)
 
 '''
 
