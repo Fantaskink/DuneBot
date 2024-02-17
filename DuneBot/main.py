@@ -1158,7 +1158,7 @@ async def handle_boosters():
 @bot.tree.command(name="add_existing_booster")
 @app_commands.describe(user="Type in the name of the user you wish to add as a booster.", role_id="Type in the id of the role you wish to assign to the user.")
 async def add_existing_booster(interaction: discord.Interaction, user: discord.User, role_id: str):
-    if not interaction.user.guild_permissions.administrator:
+    if not interaction.user.guild_permissions.ban_members:
         await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
         return
     user: discord.Member
