@@ -1199,6 +1199,27 @@ async def update_role_pos():
 
         await role.edit(position=32)
 
+
+@bot.tree.command(name="get_role_positions")
+@app_commands.describe(user="Type in the name of the user you wish to get the role positions for.")
+async def get_role_positions(interaction: discord.Interaction, user: discord.User):
+    if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+    guild = bot.guilds[0]
+    member = guild.get_member(user.id)
+
+    member: discord.Member
+
+    roles = member.roles
+
+    role_positions = []
+
+    for role in roles:
+        role_positions.append(f"{role.name}, {role.position}")
+
+    await interaction.response.send_message(role_positions, ephemeral=True)
+
 '''
 
 @bot.tree.command(name="add_existing_booster")
