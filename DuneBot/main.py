@@ -79,10 +79,14 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     # Check that author is not Dune bot and check that authors first role is not Thinking Machine
     if before.author.id == 1064478983095332864:
         return
+    
+    guild = bot.guilds[0]
+    thinking_machine_role = guild.get_role(701709720410652762)
 
-    if before.author.roles is not None:
-        if before.author.roles[0].id == 701709720410652762: 
-            return
+    before_member = guild.get_member(before.author.id)
+
+    if thinking_machine_role in before_member.roles:
+        return
     
     if before.content == after.content:
         return
@@ -1107,7 +1111,7 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
         # Create the role
         guild = bot.guilds[0]
         booster_role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
-        await booster_role.edit(position=29)
+        await booster_role.edit(position=50)
 
         member = guild.get_member(interaction.user.id)
 
@@ -1197,7 +1201,7 @@ async def update_role_pos():
         role_id = await get_booster_role_id(user_id)
         role = guild.get_role(int(role_id))
 
-        await role.edit(position=29)
+        await role.edit(position=50)
 
 
 @bot.tree.command(name="get_role_positions")
