@@ -1200,7 +1200,7 @@ async def get_role_positions(interaction: discord.Interaction, user: discord.Use
 
     for role in roles:
         role: discord.Role
-        role_positions.append(role.name, role.position)
+        role_positions.append(f"{role.name}, {role.position}")
 
     await interaction.response.send_message(role_positions, ephemeral=True)
 
