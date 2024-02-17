@@ -1089,10 +1089,8 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
         await interaction.response.send_message("Hex code must be in format #xxxxxx", ephemeral=True)
         return
     
-    guild = interaction.guild
-
+    guild = bot.guilds[0]
     member = guild.get_member(interaction.user.id)
-
     boosters = guild.premium_subscribers
     
     # Terminate if the user is not a server booster
