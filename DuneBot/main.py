@@ -55,18 +55,8 @@ async def on_message(message: discord.Message):
     await check_leak(message)
 
 @bot.event
-async def on_message_delete(message: discord.Message):
-    # Check that author is not Dune bot
-    if message.author.id == 1064478983095332864:
-        return
-    
-    guild = bot.guilds[0]
-    
-    author_member = guild.get_member(message.author.id)
-
-    thinking_machine_role = guild.get_role(701709720410652762)
-    
-    if thinking_machine_role in author_member.roles:
+async def on_message_delete(message: discord.Message):    
+    if message.author.bot:
         return
 
     timestamped_msg = {
@@ -80,16 +70,7 @@ async def on_message_delete(message: discord.Message):
 
 @bot.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
-    # Check that author is not Dune bot and check that authors first role is not Thinking Machine
-    if before.author.id == 1064478983095332864:
-        return
-    
-    guild = bot.guilds[0]
-    thinking_machine_role = guild.get_role(701709720410652762)
-
-    before_member = guild.get_member(before.author.id)
-
-    if thinking_machine_role in before_member.roles:
+    if after.author.bot:
         return
     
     if before.content == after.content:
