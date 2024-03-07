@@ -979,6 +979,14 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
         await interaction.response.send_message("Hex code must be in format #xxxxxx", ephemeral=True)
         return
     
+    if interaction.guild is None:
+        await interaction.response.send_message("This command must be run on the server.", ephemeral=True)
+        return
+    
+    if role_name == "everyone" or role_name == "here" or role_name == "Fedaykin" or role_name == "Naib" or role_name == "God Emperor":
+        await interaction.response.send_message("Illegal role name", ephemeral=True)
+        return
+    
     guild = bot.guilds[0]
     member = guild.get_member(interaction.user.id)
     boosters = guild.premium_subscribers
@@ -1055,7 +1063,7 @@ async def handle_boosters():
     for booster in boosters:
         booster: discord.Member
         if not await has_been_pinged(booster):
-            await booster.send("Thank you for boosting the server! Use /get_booster_role to set up a custom role.")
+            await booster.send("Thank you for boosting the server! Use /get_booster_role on the server to set up a custom role.")
             await add_pinged_booster(booster)
 
 
