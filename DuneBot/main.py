@@ -108,6 +108,8 @@ async def on_reaction_add(reaction: discord.Reaction, user):
     
     messages = [message async for message in starboard_channel.history(limit=100)]
     for message in messages:
+        if message.embeds == []:
+            continue
         message: discord.Message
         field = message.embeds[0].fields[0]
         jump_url_message_id = field.value.split('/')[-1]
