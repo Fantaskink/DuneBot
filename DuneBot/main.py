@@ -94,9 +94,12 @@ async def on_reaction_add(reaction: discord.Reaction, user):
     # Check if the message is in the starboard channel
     if reaction.message.channel == starboard_channel:
         return
+    
+    if reaction.emoji.name == None:
+        return
 
     # Check if emoji is the star emoji
-    if reaction.emoji != "happyherbert":
+    if reaction.emoji.name != "happyherbert":
         return
     
     # Return if the message has under 5 stars
