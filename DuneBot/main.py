@@ -95,7 +95,7 @@ async def on_reaction_add(reaction: discord.Reaction, user):
     if reaction.message.channel == starboard_channel:
         return
     
-    if reaction.emoji.name == None:
+    if isinstance(reaction.emoji, str):
         return
 
     # Check if emoji is the star emoji
