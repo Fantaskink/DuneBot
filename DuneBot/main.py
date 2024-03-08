@@ -96,7 +96,7 @@ async def on_reaction_add(reaction: discord.Reaction, user):
         return
 
     # Check if emoji is the star emoji
-    if reaction.emoji.name != "happyherbert":
+    if reaction.emoji != "happyherbert":
         return
     
     # Return if the message has under 5 stars
