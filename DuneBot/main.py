@@ -84,9 +84,55 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     return
 
 
+@bot.event
+async def on_reaction_add(reaction: discord.Reaction, user):
+    if environment == "production":
+        starboard_channel = bot.get_channel(1215786669337481277)
+    elif environment == "development":
+        starboard_channel = bot.get_channel(1215775520520929374)
+    
+    # Check if the message is in the starboard channel
+    if reaction.message.channel == starboard_channel:
+        return
+
+    # Check if emoji is the star emoji
+    if reaction.emoji.name != "happyherbert":
+        return
+    
+    # Return if the message has under 5 stars
+    if reaction.count < 10:
+        return
+    
+    messages = [message async for message in starboard_channel.history(limit=100)]
+    for message in messages:
+        message: discord.Message
+        field = message.embeds[0].fields[0]
+        jump_url_message_id = field.value.split('/')[-1]
+
+        # Remove ')' from the end of the string
+        jump_url_message_id = jump_url_message_id[:-1]
+        if int(jump_url_message_id) == int(reaction.message.id):
+            return
+
+    # Create a new message in the starboard channel
+    starboard_embed = discord.Embed(description=reaction.message.content, color=discord.Colour.gold())
+    starboard_embed.set_author(name=reaction.message.author.display_name, icon_url=reaction.message.author.avatar.url)
+    if reaction.message.attachments:
+        starboard_embed.set_image(url=reaction.message.attachments[0].url)
+    starboard_embed.add_field(name="Original", value=f"[Jump to message]({reaction.message.jump_url})")
+    #starboard_embed.set_footer(text=f"⭐ {reaction.count} | {reaction.message.channel.name}")
+
+    await starboard_channel.send(embed=starboard_embed)
+
+
+
 @bot.tree.command(name="get_deleted_messages")
 @app_commands.describe(minutes="Type in the number of minutes you wish to look back.")
 async def get_deleted_messages(interaction: discord.Interaction, minutes: int):
+    if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+    
     found_messages = []
     for deleted_message in deleted_messages:
         if datetime.now() - deleted_message["timestamp"] < timedelta(minutes=minutes):
@@ -123,6 +169,10 @@ async def get_deleted_messages(interaction: discord.Interaction, minutes: int):
 @bot.tree.command(name="get_edited_messages")
 @app_commands.describe(minutes="Type in the number of minutes you wish to look back.")
 async def get_edited_messages(interaction: discord.Interaction, minutes: int):
+    if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+    
     found_messages = []
     for edited_message in edited_messages:
         if datetime.now() - edited_message["timestamp"] < timedelta(minutes=minutes):
@@ -1084,27 +1134,6 @@ async def has_been_pinged(user: discord.Member):
             if row[0] == str(user.id):
                 return True
         return False
-
-
-@bot.tree.command(name="get_role_positions")
-@app_commands.describe(user="Type in the name of the user you wish to get the role positions for.")
-async def get_role_positions(interaction: discord.Interaction, user: discord.User):
-    if not interaction.user.guild_permissions.ban_members:
-        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
-        return
-    guild = bot.guilds[0]
-    member = guild.get_member(user.id)
-
-    member: discord.Member
-
-    roles = member.roles
-
-    role_positions = []
-
-    for role in roles:
-        role_positions.append(f"{role.name}, {role.position}")
-
-    await interaction.response.send_message(role_positions, ephemeral=True)
 
 '''
 
