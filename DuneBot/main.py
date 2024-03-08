@@ -100,7 +100,7 @@ async def on_reaction_add(reaction: discord.Reaction, user):
         return
     
     # Return if the message has under 5 stars
-    if reaction.count < 10:
+    if reaction.count < 5:
         return
     
     messages = [message async for message in starboard_channel.history(limit=100)]
