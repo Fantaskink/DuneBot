@@ -85,7 +85,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
 
 
 @bot.event
-async def on_reaction_add(reaction: discord.Reaction, user):
+async def on_raw_reaction_add(reaction: discord.Reaction, user):
     if environment == "production":
         starboard_channel = bot.get_channel(1215786669337481277)
     elif environment == "development":
