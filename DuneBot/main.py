@@ -95,14 +95,13 @@ async def on_reaction_add(reaction: discord.Reaction, user):
     if reaction.message.channel == starboard_channel:
         return
     
+    # Check if the reaction is a custom emoji
     if isinstance(reaction.emoji, str):
         return
 
-    # Check if emoji is the star emoji
     if reaction.emoji.name != "happyherbert":
         return
     
-    # Return if the message has under 5 stars
     if reaction.count < 5:
         return
     
@@ -299,7 +298,7 @@ async def update_presence_task():
     await update_presence()
     
 
-@tasks.loop(hours=12)
+@tasks.loop(hours=1)
 async def handle_boosters_task():
     await handle_boosters()
 
@@ -1100,7 +1099,7 @@ async def handle_boosters():
             guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
 
-            user.remove_roles(role, reason="Booster role")
+            await user.remove_roles(role, reason="Booster role")
 
             await set_booster_status(id, False)
         
