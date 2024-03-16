@@ -1039,7 +1039,9 @@ async def handle_boosters():
     booster_ids = await get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
     boosters = bot.guilds[0].premium_subscribers # List of all the server's boosters
 
-    print(boosters)
+    fanta = bot.guilds[0].get_member(157128796405760000)
+
+    fanta.send(str(boosters))
 
     for user_id in booster_ids:
         user = bot.guilds[0].get_member(int(user_id))
@@ -1057,9 +1059,6 @@ async def handle_boosters():
             role_id = await get_booster_role_id(user_id)
             guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
-
-            print("Removing role")
-            print(role)
 
             await user.remove_roles(role, reason="Booster role")
 
