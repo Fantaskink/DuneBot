@@ -1041,9 +1041,6 @@ async def handle_boosters():
 
     fanta = bot.guilds[0].get_member(157128796405760000)
 
-    for booster in boosters:
-        await fanta.send(booster)
-
     for user_id in booster_ids:
         user = bot.guilds[0].get_member(int(user_id))
         
@@ -1052,14 +1049,14 @@ async def handle_boosters():
         # If user has left the server, do nothing
         if user is None:
             break
-
-        
         
         # In cases where a user's boost has run out
         if user not in boosters:
             role_id = await get_booster_role_id(user_id)
             guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
+
+            await fanta.send(role)
 
             await user.remove_roles(role, reason="Booster role")
 
