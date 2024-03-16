@@ -1041,7 +1041,8 @@ async def handle_boosters():
 
     fanta = bot.guilds[0].get_member(157128796405760000)
 
-    await fanta.send(str(boosters))
+    for booster in boosters:
+        await fanta.send(str(booster))
 
     for user_id in booster_ids:
         user = bot.guilds[0].get_member(int(user_id))
