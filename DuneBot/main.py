@@ -391,51 +391,6 @@ async def delete_spoiler_keyword(interaction: discord.Interaction, index: int):
     await interaction.response.send_message(f"Keyword removed.")
 
 
-@bot.tree.command(name="meme")
-@app_commands.describe(top_text="Top text", bottom_text="Bottom text", image_link="Image link")
-async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str, image_link: str):
-    from PIL import Image, ImageDraw, ImageFont
-    import requests
-    from io import BytesIO
-
-    await interaction.response.defer(ephemeral=True)
-    
-    # Load the image from the link
-    response = requests.get(image_link)
-    img = Image.open(BytesIO(response.content))
-
-    file_path = base_path + 'impact.tff'
-
-    # Load Impact font
-    font = ImageFont.truetype(file_path, 40)  # Make sure you have the "impact.ttf" file in the same directory
-
-    # Initialize the drawing context
-    draw = ImageDraw.Draw(img)
-
-    # Calculate text bounding boxes
-    top_text_bbox = draw.textbbox((0, 0), top_text, font=font)
-    bottom_text_bbox = draw.textbbox((0, 0), bottom_text, font=font)
-
-    # Calculate text positions
-    width, height = img.size
-    top_text_position = ((width - top_text_bbox[2]) / 2, 10)
-    bottom_text_position = ((width - bottom_text_bbox[2]) / 2, height - bottom_text_bbox[3] - 10)
-
-    # Draw top and bottom text on the image
-    draw.text(top_text_position, top_text, fill="white", font=font)
-    draw.text(bottom_text_position, bottom_text, fill="white", font=font)
-
-    # Save the modified image to a BytesIO object
-    modified_img_io = BytesIO()
-    img.save(modified_img_io, format="PNG")
-    modified_img_io.seek(0)
-
-    # Create a Discord File object
-    modified_img_file = discord.File(modified_img_io, filename="meme.png")
-
-    await interaction.followup.send(file=modified_img_file)
-
-
 # Command that fetches the profile picture of a user and sends it as a message
 @bot.tree.command(name="pfp")
 @app_commands.describe(user="Type in the name of the user whose profile picture you wish to see.")
@@ -1095,7 +1050,7 @@ async def handle_boosters():
         
         # In cases where a user's boost has run out
         if user not in boosters:
-            role_id = await get_booster_role_id(id)
+            role_id = await get_booster_role_id(user_id)
             guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
 
@@ -1140,6 +1095,49 @@ async def has_been_pinged(user: discord.Member):
         return False
 
 '''
+@bot.tree.command(name="meme")
+@app_commands.describe(top_text="Top text", bottom_text="Bottom text", image_link="Image link")
+async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str, image_link: str):
+    from PIL import Image, ImageDraw, ImageFont
+    import requests
+    from io import BytesIO
+
+    await interaction.response.defer(ephemeral=True)
+    
+    # Load the image from the link
+    response = requests.get(image_link)
+    img = Image.open(BytesIO(response.content))
+
+    file_path = base_path + 'impact.tff'
+
+    # Load Impact font
+    font = ImageFont.truetype(file_path, 40)  # Make sure you have the "impact.ttf" file in the same directory
+
+    # Initialize the drawing context
+    draw = ImageDraw.Draw(img)
+
+    # Calculate text bounding boxes
+    top_text_bbox = draw.textbbox((0, 0), top_text, font=font)
+    bottom_text_bbox = draw.textbbox((0, 0), bottom_text, font=font)
+
+    # Calculate text positions
+    width, height = img.size
+    top_text_position = ((width - top_text_bbox[2]) / 2, 10)
+    bottom_text_position = ((width - bottom_text_bbox[2]) / 2, height - bottom_text_bbox[3] - 10)
+
+    # Draw top and bottom text on the image
+    draw.text(top_text_position, top_text, fill="white", font=font)
+    draw.text(bottom_text_position, bottom_text, fill="white", font=font)
+
+    # Save the modified image to a BytesIO object
+    modified_img_io = BytesIO()
+    img.save(modified_img_io, format="PNG")
+    modified_img_io.seek(0)
+
+    # Create a Discord File object
+    modified_img_file = discord.File(modified_img_io, filename="meme.png")
+
+    await interaction.followup.send(file=modified_img_file)
 
 
 async def update_role_pos():
