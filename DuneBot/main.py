@@ -1036,13 +1036,15 @@ async def get_booster_role(interaction: discord.Interaction, role_name: str, hex
 
 
 async def handle_boosters():
+    guild = bot.guilds[0]
     booster_ids = await get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
-    boosters = bot.guilds[0].premium_subscribers # List of all the server's boosters
+    boosters = guild.premium_subscribers # List of all the server's boosters
 
-    fanta = bot.guilds[0].get_member(157128796405760000)
+    
+    fanta = guild.get_member(157128796405760000)
 
     for user_id in booster_ids:
-        user = bot.guilds[0].get_member(int(user_id))
+        user = guild.get_member(int(user_id))
         
         user: discord.Member
 
@@ -1057,7 +1059,6 @@ async def handle_boosters():
         # In cases where a user's boost has run out
         if user not in boosters:
             role_id = await get_booster_role_id(user_id)
-            guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
 
             await fanta.send(role)
@@ -1069,7 +1070,6 @@ async def handle_boosters():
         # If the user has previously boosted and set up a custom role and has started boosting again
         if await is_active_booster(id) == "False" and user in boosters:
             role_id = await get_booster_role_id(user_id)
-            guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
 
             user.add_roles(role, reason="Booster role")
