@@ -1072,7 +1072,10 @@ async def handle_boosters():
     for booster in boosters:
         booster: discord.Member
         if not await has_been_pinged(booster):
-            await booster.send("Thank you for boosting the server! Use /get_booster_role on the server to set up a custom role.")
+            general_chat = bot.guilds[0].get_channel(701674250591010840)
+            general_chat: discord.TextChannel
+
+            await general_chat.send(f"Thank you for boosting the server {booster.mention}! Use /get_booster_role to set up a custom role.")
             await add_pinged_booster(booster)
 
 
