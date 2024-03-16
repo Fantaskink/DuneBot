@@ -1039,6 +1039,8 @@ async def handle_boosters():
     booster_ids = await get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
     boosters = bot.guilds[0].premium_subscribers # List of all the server's boosters
 
+    print(boosters)
+
     for user_id in booster_ids:
         user = bot.guilds[0].get_member(int(user_id))
         
@@ -1047,6 +1049,8 @@ async def handle_boosters():
         # If user has left the server, do nothing
         if user is None:
             break
+
+        
         
         # In cases where a user's boost has run out
         if user not in boosters:
