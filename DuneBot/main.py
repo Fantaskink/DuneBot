@@ -1054,6 +1054,9 @@ async def handle_boosters():
             guild = bot.guilds[0]
             role = discord.utils.get(guild.roles, id=int(role_id))
 
+            print("Removing role")
+            print(role)
+
             await user.remove_roles(role, reason="Booster role")
 
             await set_booster_status(id, False)
