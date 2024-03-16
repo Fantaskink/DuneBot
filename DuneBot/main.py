@@ -1048,7 +1048,7 @@ async def handle_boosters():
     
         # If user has left the server, do nothing
         if user is None:
-            break
+            continue
 
         await fanta.send(user)
         
