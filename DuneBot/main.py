@@ -928,7 +928,7 @@ async def write_booster_to_csv(user_id, role_id):
         csv_writer = csv.writer(booster_file)
 
         # user_id, role_id, is_currently_boosting
-        csv_writer.writerow([user_id, role_id, True])
+        csv_writer.writerow([user_id, role_id])
     return
 
 
@@ -953,31 +953,6 @@ async def get_booster_ids():
         for row in csv_reader:
             booster_ids.append(row[0])
     return booster_ids
-
-async def set_booster_status(user_id, status): # True if boosting, False if not
-    file_path = base_path + 'csv/boosters.csv'
-
-    with open(file_path, 'r') as stats_file:
-        csv_reader = csv.reader(stats_file)
-        lines = list(csv_reader)
-        for i in range(len(lines)):
-            if lines[i][0] == user_id:
-                lines[i][2] = status
-    
-    with open(file_path, 'w') as stats_file:
-        csv_writer = csv.writer(stats_file)
-        csv_writer.writerows(lines)
-
-async def is_active_booster(user_id):
-    file_path = base_path + 'csv/boosters.csv'
-
-    with open(file_path, 'r') as stats_file:
-        csv_reader = csv.reader(stats_file)
-
-        for row in csv_reader:
-            if row[0] == user_id:
-                return row[2]
-        return False
 
 @bot.tree.command(name="get_booster_role")
 @app_commands.describe(role_name="Type in the name of the role you wish to create.", hex_code="Type in the hex code of the color you wish the role to be.")
@@ -1040,13 +1015,10 @@ async def handle_boosters():
     booster_ids = await get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
     boosters = guild.premium_subscribers # List of all the server's boosters
 
-    
     fanta = guild.get_member(157128796405760000)
 
     for user_id in booster_ids:
         user = guild.get_member(int(user_id))
-
-        await fanta.send(user)
     
         # If user has left the server, do nothing
         if user is None:
@@ -1058,17 +1030,15 @@ async def handle_boosters():
             role = discord.utils.get(guild.roles, id=int(role_id))
 
             await user.remove_roles(role, reason="Booster role")
-
-            await set_booster_status(id, False)
         
         # If the user has previously boosted and set up a custom role and has started boosting again
-        if await is_active_booster(id) == "False" and user in boosters:
+        if user in boosters:
             role_id = await get_booster_role_id(user_id)
             role = discord.utils.get(guild.roles, id=int(role_id))
 
-            user.add_roles(role, reason="Booster role")
+            if role not in user.roles:
+                await user.add_roles(role, reason="Booster role")
 
-            await set_booster_status(id, True)
     
     # Ping users that do not have a custom role and have not been pinged already
     for booster in boosters:
