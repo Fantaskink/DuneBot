@@ -1045,11 +1045,9 @@ async def handle_boosters():
 
     for user_id in booster_ids:
         user = guild.get_member(int(user_id))
-        
-        user: discord.Member
-
+    
+        role_id = await get_booster_role_id(user_id)
         role = discord.utils.get(guild.roles, id=int(role_id))
-
         await fanta.send(role)
 
         # If user has left the server, do nothing
