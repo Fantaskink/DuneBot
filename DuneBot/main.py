@@ -1049,14 +1049,14 @@ async def handle_boosters():
         # If user has left the server, do nothing
         if user is None:
             break
+
+        await fanta.send(user)
         
         # In cases where a user's boost has run out
         if user not in boosters:
-            await fanta.send("User not in list")
+            
             role_id = await get_booster_role_id(user_id)
             role = discord.utils.get(guild.roles, id=int(role_id))
-
-            
 
             await user.remove_roles(role, reason="Booster role")
 
