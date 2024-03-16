@@ -1046,6 +1046,10 @@ async def handle_boosters():
         
         user: discord.Member
 
+        role = discord.utils.get(guild.roles, id=int(role_id))
+
+        await fanta.send(role)
+
         # If user has left the server, do nothing
         if user is None:
             break
@@ -1074,7 +1078,6 @@ async def handle_boosters():
     
     # Ping users that do not have a custom role and have not been pinged already
     for booster in boosters:
-        booster: discord.Member
         if not await has_been_pinged(booster):
             general_chat = bot.guilds[0].get_channel(701674250591010840)
             general_chat: discord.TextChannel
