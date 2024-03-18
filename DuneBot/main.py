@@ -85,26 +85,30 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
 
 
 @bot.event
-async def on_reaction_add(reaction: discord.Reaction, user):
+async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     if environment == "production":
         starboard_channel = bot.get_channel(1215786669337481277)
         announcements_channel = bot.get_channel(703342509488734289)
     elif environment == "development":
         starboard_channel = bot.get_channel(1215775520520929374)
         announcements_channel = bot.get_channel(1215775520520929374)
+
+    reaction_channel = bot.guilds[0].get_channel(payload.channel_id)
+
+    reaction_message = await reaction_channel.fetch_message(payload.message_id)
+
+    has_over_5_reactions = False
+
+    for reaction in reaction_message.reactions:
+        if reaction.count >= 5:
+            has_over_5_reactions = True
+            break
     
-    # Check if the message is in the starboard channel
-    if reaction.message.channel == starboard_channel or reaction.message.channel == announcements_channel:
+    if not has_over_5_reactions:
         return
     
-    # Check if the reaction is a custom emoji
-    #if isinstance(reaction.emoji, str):
-       # return
-
-    #if reaction.emoji.name != "happyherbert" and reaction.emoji.name != "fire":
-        #return
-    
-    if reaction.count < 5:
+    # Check if the message is in the starboard channel
+    if reaction_channel == starboard_channel or reaction_channel == announcements_channel:
         return
     
     messages = [message async for message in starboard_channel.history(limit=100)]
@@ -117,20 +121,20 @@ async def on_reaction_add(reaction: discord.Reaction, user):
 
         # Remove ')' from the end of the string
         jump_url_message_id = jump_url_message_id[:-1]
-        if int(jump_url_message_id) == int(reaction.message.id):
+        if int(jump_url_message_id) == int(reaction_message.id):
             return
 
     # Create a new message in the starboard channel
-    starboard_embed = discord.Embed(description=reaction.message.content, color=discord.Colour.gold())
-    starboard_embed.set_author(name=reaction.message.author.display_name, icon_url=reaction.message.author.avatar.url)
-    if reaction.message.attachments:
-        starboard_embed.set_image(url=reaction.message.attachments[0].url)
-    starboard_embed.add_field(name="Original", value=f"[Jump to message]({reaction.message.jump_url})")
-    #starboard_embed.set_footer(text=f"⭐ {reaction.count} | {reaction.message.channel.name}")
+    starboard_embed = discord.Embed(description=reaction_message.content, color=discord.Colour.gold())
+    starboard_embed.set_author(name=reaction_message.author.display_name, icon_url=reaction_message.author.avatar.url)
+    if reaction_message.attachments:
+        starboard_embed.set_image(url=reaction_message.attachments[0].url)
+    starboard_embed.add_field(name="Original", value=f"[Jump to message]({reaction_message.jump_url})")
+    #starboard_embed.set_footer(text=f"⭐ {reaction.count} | {reaction_channel.name}")
 
     await starboard_channel.send(embed=starboard_embed)
 
-    await reaction.message.channel.send(f"Post added to {starboard_channel.mention} {message.author.mention}")
+    await reaction_channel.send(f"Post added to {starboard_channel.mention} {reaction_message.author.mention}")
 
 
 
