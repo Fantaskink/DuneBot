@@ -93,19 +93,25 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     elif environment == "development":
         starboard_channel = bot.get_channel(1215775520520929374)
         announcements_channel = bot.get_channel(1215775520520929374)
+        role_select_channel = bot.get_channel(1215775520520929374)
 
     reaction_channel = bot.guilds[0].get_channel(payload.channel_id)
 
     reaction_message = await reaction_channel.fetch_message(payload.message_id)
 
-    has_over_5_reactions = False
+    has_required_reactions = False
 
     for reaction in reaction_message.reactions:
-        if reaction.count >= 5:
-            has_over_5_reactions = True
+        if isinstance(reaction.emoji, str):
+            if reaction.count >= 10:
+                has_required_reactions = True
+                break
+        elif reaction.emoji.name == "happyherbert" and reaction.count >= 5:
+            has_required_reactions = True
             break
+
     
-    if not has_over_5_reactions:
+    if not has_required_reactions:
         return
     
     # Check if the message is in the starboard channel
