@@ -88,19 +88,21 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
 async def on_reaction_add(reaction: discord.Reaction, user):
     if environment == "production":
         starboard_channel = bot.get_channel(1215786669337481277)
+        announcements_channel = bot.get_channel(703342509488734289)
     elif environment == "development":
         starboard_channel = bot.get_channel(1215775520520929374)
+        announcements_channel = bot.get_channel(1215775520520929374)
     
     # Check if the message is in the starboard channel
-    if reaction.message.channel == starboard_channel:
+    if reaction.message.channel == starboard_channel or reaction.message.channel == announcements_channel:
         return
     
     # Check if the reaction is a custom emoji
-    if isinstance(reaction.emoji, str):
-        return
+    #if isinstance(reaction.emoji, str):
+       # return
 
-    if reaction.emoji.name != "happyherbert":
-        return
+    #if reaction.emoji.name != "happyherbert" and reaction.emoji.name != "fire":
+        #return
     
     if reaction.count < 5:
         return
@@ -127,6 +129,8 @@ async def on_reaction_add(reaction: discord.Reaction, user):
     #starboard_embed.set_footer(text=f"⭐ {reaction.count} | {reaction.message.channel.name}")
 
     await starboard_channel.send(embed=starboard_embed)
+
+    await reaction.message.channel.send(f"Post added to {starboard_channel.mention} {message.author.mention}")
 
 
 
