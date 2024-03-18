@@ -89,6 +89,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     if environment == "production":
         starboard_channel = bot.get_channel(1215786669337481277)
         announcements_channel = bot.get_channel(703342509488734289)
+        role_select_channel = bot.get_channel(714440866886058054)
     elif environment == "development":
         starboard_channel = bot.get_channel(1215775520520929374)
         announcements_channel = bot.get_channel(1215775520520929374)
@@ -108,7 +109,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         return
     
     # Check if the message is in the starboard channel
-    if reaction_channel == starboard_channel or reaction_channel == announcements_channel:
+    if reaction_channel == starboard_channel or reaction_channel == announcements_channel or reaction_channel == role_select_channel:
         return
     
     messages = [message async for message in starboard_channel.history(limit=100)]
