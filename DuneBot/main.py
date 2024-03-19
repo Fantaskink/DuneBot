@@ -86,14 +86,19 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
 
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
+    ignored_channels = []
+
     if environment == "production":
-        starboard_channel = bot.get_channel(1215786669337481277)
-        announcements_channel = bot.get_channel(703342509488734289)
-        role_select_channel = bot.get_channel(714440866886058054)
+        hall_of_fame_channel = bot.get_channel(1215786669337481277)
+        ignored_channels.append(bot.get_channel(1215786669337481277)) # Hall Of Fame channel
+        ignored_channels.append(bot.get_channel(703342509488734289)) # Announcements
+        ignored_channels.append(bot.get_channel(714440866886058054)) # Role Select
+        ignored_channels.append(bot.get_channel(701681911348592771)) # Rules
+        ignored_channels.append(bot.get_channel(701680471066542121)) # Welcome info
+
     elif environment == "development":
-        starboard_channel = bot.get_channel(1215775520520929374)
-        announcements_channel = bot.get_channel(1215775520520929374)
-        role_select_channel = bot.get_channel(1215775520520929374)
+        ignored_channels.append(bot.get_channel(1215775520520929374))   
+        hall_of_fame_channel = bot.get_channel(1215775520520929374) 
 
     reaction_channel = bot.guilds[0].get_channel(payload.channel_id)
 
@@ -115,10 +120,10 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         return
     
     # Check if the message is in the starboard channel
-    if reaction_channel == starboard_channel or reaction_channel == announcements_channel or reaction_channel == role_select_channel:
+    if reaction_channel in ignored_channels:
         return
     
-    messages = [message async for message in starboard_channel.history(limit=100)]
+    messages = [message async for message in hall_of_fame_channel.history(limit=100)]
     for message in messages:
         if message.embeds == []:
             continue
@@ -139,9 +144,9 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     starboard_embed.add_field(name="Original", value=f"[Jump to message]({reaction_message.jump_url})")
     #starboard_embed.set_footer(text=f"⭐ {reaction.count} | {reaction_channel.name}")
 
-    await starboard_channel.send(embed=starboard_embed)
+    await hall_of_fame_channel.send(embed=starboard_embed)
 
-    await reaction_channel.send(f"Post added to {starboard_channel.mention} {reaction_message.author.mention}")
+    await reaction_channel.send(f"Post added to {hall_of_fame_channel.mention} {reaction_message.author.mention}")
 
 
 
