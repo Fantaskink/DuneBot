@@ -114,12 +114,14 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         elif reaction.emoji.name == "happyherbert" and reaction.count >= 5:
             has_required_reactions = True
             break
-
+        elif reaction.count >= 10:
+            has_required_reactions = True
+            break
     
     if not has_required_reactions:
         return
     
-    # Check if the message is in the starboard channel
+    # Check if the message is in an ignored channel
     if reaction_channel in ignored_channels:
         return
     
@@ -136,15 +138,15 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         if int(jump_url_message_id) == int(reaction_message.id):
             return
 
-    # Create a new message in the starboard channel
-    starboard_embed = discord.Embed(description=reaction_message.content, color=discord.Colour.gold())
-    starboard_embed.set_author(name=reaction_message.author.display_name, icon_url=reaction_message.author.avatar.url)
+    # Create a new message in the hall of fame channel
+    hof_embed = discord.Embed(description=reaction_message.content, color=discord.Colour.gold())
+    hof_embed.set_author(name=reaction_message.author.display_name, icon_url=reaction_message.author.avatar.url)
     if reaction_message.attachments:
-        starboard_embed.set_image(url=reaction_message.attachments[0].url)
-    starboard_embed.add_field(name="Original", value=f"[Jump to message]({reaction_message.jump_url})")
-    #starboard_embed.set_footer(text=f"⭐ {reaction.count} | {reaction_channel.name}")
+        hof_embed.set_image(url=reaction_message.attachments[0].url)
+    hof_embed.add_field(name="Original", value=f"[Jump to message]({reaction_message.jump_url})")
+    #hof_embed.set_footer(text=f"⭐ {reaction.count} | {reaction_channel.name}")
 
-    await hall_of_fame_channel.send(embed=starboard_embed)
+    await hall_of_fame_channel.send(embed=hof_embed)
 
     await reaction_channel.send(f"Post added to {hall_of_fame_channel.mention} {reaction_message.author.mention}")
 
@@ -1035,8 +1037,6 @@ async def handle_boosters():
     booster_ids = await get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
     boosters = guild.premium_subscribers # List of all the server's boosters
 
-    fanta = guild.get_member(157128796405760000)
-
     for user_id in booster_ids:
         user = guild.get_member(int(user_id))
     
@@ -1059,7 +1059,7 @@ async def handle_boosters():
             if role not in user.roles:
                 await user.add_roles(role, reason="Booster role")
 
-    
+
     # Ping users that do not have a custom role and have not been pinged already
     for booster in boosters:
         if not await has_been_pinged(booster):
@@ -1087,6 +1087,30 @@ async def has_been_pinged(user: discord.Member):
             if row[0] == str(user.id):
                 return True
         return False
+
+@bot.tree.command(name="april_fools")
+@app_commands.describe()
+async def april_fools(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.ban_members:
+        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+        return
+    
+    embed = discord.Embed(
+        title="Dune Part Three Delayed Indefinitely as Warner Bros. Faces Financial Woes",
+        description="Warner Bros. CEO, David Zaslav has yet to make a comment on the controversial decision.",
+        color=0xffa200,
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    )
+    embed.set_image(url="https://m.media-amazon.com/images/M/MV5BNTY5MWQxZTUtNWFjNC00Nzk5LThiM2EtNDk0NGRlYzQwY2U4XkEyXkFqcGdeQXZ3ZXNsZXk@._V1_QL75_UX500_CR0,0,500,281_.jpg")
+    embed.set_author(name="New York Times", url="https://www.nytimes.com/", icon_url="https://theme.zdassets.com/theme_assets/968999/d8a347b41db1ddee634e2d67d08798c102ef09ac.jpg")
+    embed.set_footer(text="https://www.nytimes.com/dune-part-three-cancellation")
+
+    await interaction.channel.send(embed=embed)
+    
+
+
+
+bot.run(os.environ.get("TOKEN"))
 
 '''
 @bot.tree.command(name="meme")
@@ -1132,28 +1156,6 @@ async def meme(interaction: discord.Interaction, top_text: str, bottom_text: str
     modified_img_file = discord.File(modified_img_io, filename="meme.png")
 
     await interaction.followup.send(file=modified_img_file)
-
-
-async def update_role_pos():
-    guild = bot.guilds[0]
-    booster_ids = await get_booster_ids()
-
-    for user_id in booster_ids:
-        role_id = await get_booster_role_id(user_id)
-        role = guild.get_role(int(role_id))
-
-        await role.edit(position=50)
-
-@bot.tree.command(name="add_existing_booster")
-@app_commands.describe(user="Type in the name of the user you wish to add as a booster.", role_id="Type in the id of the role you wish to assign to the user.")
-async def add_existing_booster(interaction: discord.Interaction, user: discord.User, role_id: str):
-    if not interaction.user.guild_permissions.ban_members:
-        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
-        return
-    user: discord.Member
-
-    await write_booster_to_csv(str(user.id), role_id)
-    await interaction.response.send_message("Booster role assigned", ephemeral=True)
 
 # Set up subreddit streaming in specific channel
 @bot.tree.command(name="stream_subreddit")
@@ -1258,38 +1260,4 @@ async def encyclopedia(interaction: discord.Interaction, keyword: str):
                         print('Cancelled...')
 
     await interaction.response.send_message(f"Entry not found.", ephemeral=True)
-
-
-# Define a simple View that gives us a confirmation menu
-class Pages(discord.ui.View):
-    def __init__(self, page_count: int):
-        super().__init__()
-        self.index = 0
-        self.page_count = page_count
-    
-    @discord.ui.button(label='Previous page', style=discord.ButtonStyle.primary)
-    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button, ):
-        await interaction.response.send_message('Confirming', ephemeral=True)
-        self.index = max(0, self.index - 1)
-        print(self.index)
-        await self.update_buttons()
-
-    
-    @discord.ui.button(label='Next page', style=discord.ButtonStyle.primary)
-    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message('Cancelling', ephemeral=True)
-        self.index = min(self.page_count, self.index + 1)
-        print(self.index)
-        print("page count" + str(self.page_count))
-        await self.update_buttons()
-    
-    async def update_buttons(self):
-        print("update buttons")
-        self.children[0].disabled = (self.index == 0)
-        self.children[1].disabled = (self.index == self.page_count)
-
-            
 '''
-
-
-bot.run(os.environ.get("TOKEN"))
