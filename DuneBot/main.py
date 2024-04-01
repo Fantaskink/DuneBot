@@ -1088,27 +1088,6 @@ async def has_been_pinged(user: discord.Member):
                 return True
         return False
 
-@bot.tree.command(name="april_fools")
-@app_commands.describe()
-async def april_fools(interaction: discord.Interaction):
-    if not interaction.user.guild_permissions.ban_members:
-        await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
-        return
-    
-    embed = discord.Embed(
-        title="Dune Part Three Delayed Indefinitely as Warner Bros. Faces Financial Woes",
-        description="Warner Bros. CEO, David Zaslav has yet to make a comment on the controversial decision.",
-        color=0xffa200,
-        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    )
-    embed.set_image(url="https://m.media-amazon.com/images/M/MV5BNTY5MWQxZTUtNWFjNC00Nzk5LThiM2EtNDk0NGRlYzQwY2U4XkEyXkFqcGdeQXZ3ZXNsZXk@._V1_QL75_UX500_CR0,0,500,281_.jpg")
-    embed.set_author(name="New York Times", url="https://www.nytimes.com/", icon_url="https://theme.zdassets.com/theme_assets/968999/d8a347b41db1ddee634e2d67d08798c102ef09ac.jpg")
-    embed.set_footer(text="https://www.nytimes.com/dune-part-three-cancellation")
-
-    await interaction.channel.send(embed=embed)
-    
-
-
 
 bot.run(os.environ.get("TOKEN"))
 
