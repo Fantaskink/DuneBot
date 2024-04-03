@@ -22,6 +22,8 @@ async def on_ready():
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(cog, exc))
+    
+    await bot.tree.sync()
 
     #update_presence_task.start()
 
