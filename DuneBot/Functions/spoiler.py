@@ -64,6 +64,9 @@ class SpoilerCog(commands.Cog):
         if message.author.bot:
             return
         
+        if isinstance(message.content, app_commands.Choice):
+            return
+        
         # List of keywords to look for
         keywords = get_keyword_choices()
 
