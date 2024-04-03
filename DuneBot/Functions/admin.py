@@ -1,10 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import re
-import csv
 from typing import List, Tuple
-from config import get_base_path, MODLOG_CHANNEL_ID, ENVIRONMENT
+from config import MODLOG_CHANNEL_ID
 
 
 class AdminCog(commands.Cog):

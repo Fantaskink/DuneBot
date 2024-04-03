@@ -1,7 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ext import tasks
-from datetime import date, datetime, time, timedelta
 from config import TOKEN
 
 intents = discord.Intents.all()
@@ -22,8 +20,6 @@ async def on_ready():
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(cog, exc))
-    
-    await bot.tree.sync()
 
     #update_presence_task.start()
 
