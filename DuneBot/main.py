@@ -22,8 +22,6 @@ async def on_ready():
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(cog, exc))
 
-    #update_presence_task.start()
-
     #print(f'{bot.user} is now running.')
 
 """
@@ -36,9 +34,7 @@ async def update_presence():
     await bot.change_presence(activity=activity)
     
 
-@tasks.loop(hours=24)
-async def update_presence_task():
-    await update_presence()
+
     
 
 async def get_days_until_string(target_date_str, time_str):
