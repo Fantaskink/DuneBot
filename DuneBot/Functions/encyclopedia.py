@@ -2,13 +2,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from config import get_base_path
+import fandom
 import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
-import csv
 import re
-
-ENCYCLOPEDIA_CSV_PATH = f"{get_base_path()}csv/encyclopedia.csv"
 
 def get_title_from_index(index):
     match (index):
@@ -26,99 +24,6 @@ def get_title_from_index(index):
             return "Chapterhouse Dune"
         case (_):
             return "Unknown"
-
-
-class EncyclopediaView(discord.ui.View):
-    def __init__(self, data):
-        super().__init__()
-        self.title = data.get("title")
-        self.page_list = data.get("results")
-        self.img_url = data.get("img_url")
-        self.current_page = 1
-        self.timeout = 600
-    
-
-    async def send(self, interaction: discord.Interaction):
-        self.message = await interaction.followup.send(view=self)
-        await self.update_message()
-    
-
-    def create_embed(self):
-        embed = discord.Embed(title=f"Article Page {self.current_page} of {len(self.page_list)}", color=discord.Colour.dark_gold())
-        title = self.title
-
-        result = self.page_list[self.current_page - 1]
-
-        if self.img_url is not None:
-            embed.set_thumbnail(url=self.img_url)
-
-        embed.add_field(name=title, value=result, inline=False)
-
-        return embed
-    
-    def update_buttons(self):
-        if self.current_page == 1:
-            self.first_page_button.disabled = True
-            self.prev_button.disabled = True
-            self.first_page_button.style = discord.ButtonStyle.gray
-            self.prev_button.style = discord.ButtonStyle.gray
-        else:
-            self.first_page_button.disabled = False
-            self.prev_button.disabled = False
-            self.first_page_button.style = discord.ButtonStyle.green
-            self.prev_button.style = discord.ButtonStyle.primary
-
-        if self.current_page == len(self.page_list):
-            self.next_button.disabled = True
-            self.last_page_button.disabled = True
-            self.last_page_button.style = discord.ButtonStyle.gray
-            self.next_button.style = discord.ButtonStyle.gray
-        else:
-            self.next_button.disabled = False
-            self.last_page_button.disabled = False
-            self.last_page_button.style = discord.ButtonStyle.green
-            self.next_button.style = discord.ButtonStyle.primary
-    
-    async def on_timeout(self):
-        self.first_page_button.disabled = True
-        self.prev_button.disabled = True
-        self.next_button.disabled = True
-        self.last_page_button.disabled = True
-        self.clear_items()
-        self.stop()
-
-        await self.update_message()
-    
-
-    @discord.ui.button(label="|<", style=discord.ButtonStyle.primary)
-    async def first_page_button(self, interaction: discord.Interaction, button: discord.ui.button):
-        await interaction.response.defer()
-        self.current_page = 1
-        await self.update_message()
-
-    @discord.ui.button(label="<", style=discord.ButtonStyle.primary)
-    async def prev_button(self, interaction: discord.Interaction, button: discord.ui.button):
-        await interaction.response.defer()
-        self.current_page -= 1
-        await self.update_message()
-
-    @discord.ui.button(label=">", style=discord.ButtonStyle.primary)
-    async def next_button(self, interaction: discord.Interaction, button: discord.ui.button):
-        await interaction.response.defer()
-        self.current_page += 1
-        await self.update_message()
-
-    @discord.ui.button(label=">|", style=discord.ButtonStyle.primary)
-    async def last_page_button(self, interaction: discord.Interaction, button: discord.ui.button):
-        await interaction.response.defer()
-        self.current_page = len(self.page_list)
-        await self.update_message()
-    
-
-    async def update_message(self):
-        self.update_buttons()
-        await self.message.edit(embed=self.create_embed(), view=self)
-    
 
 
 
@@ -223,26 +128,24 @@ class EncyclopediaCog(commands.Cog):
     @app_commands.describe(search_term="Type in the word you wish to search for.")
     async def search_in_encyclopedia(self, interaction: discord.Interaction, search_term: str):
         await interaction.response.defer()
-
-        with open(ENCYCLOPEDIA_CSV_PATH, 'r', newline='') as csvfile:
-            csv_reader = csv.reader(csvfile, skipinitialspace=False)
-
-            for row in csv_reader:
-                if search_term.lower() == row[0].lower():
-                    description_list = row[1:-1]
-                    description = ""
-                    for string in description_list:
-                        description += string
-
-                    data = {"title":row[0], "results":[description], "img_url":row[-1]}
+        fandom.set_wiki("dune")
+        try:
+            wiki_page = fandom.page(search_term)
+        except Exception as e:
+            await interaction.followup.send("No results found")
+            return
         
-            if data is None:
-                await interaction.followup.send("No results found")
-                return
+        image = wiki_page.images[0]
 
-            encyclopedia_view = EncyclopediaView(data)
+        text = wiki_page.plain_text
 
-            await encyclopedia_view.send(interaction)
+        text_shortened = (text[:1000] + '...') if len(text) > 500 else text
+        
+        embed = discord.Embed(title=wiki_page.title, description=text_shortened, color=discord.Colour.dark_gold())
+
+        embed.set_thumbnail(url=image)
+
+        await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="search_in_dune")
     @app_commands.describe(search_term="Type in the string you wish to search for.")
@@ -299,7 +202,7 @@ def search_in_epub_with_element(search_term, index, element):
         return results
     else:
         return None
-
+    
 
 async def setup(bot: commands.Bot) -> None: 
     await bot.add_cog(EncyclopediaCog(bot))

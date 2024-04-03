@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from config import TOKEN
 
+
 intents = discord.Intents.all()
 intents.message_content = True
 

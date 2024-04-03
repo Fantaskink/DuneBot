@@ -182,9 +182,6 @@ def search_title_on_goodreads(query):
         return None
 
 
-
-
-
 def get_primary_hex_color(image_url):
     response = requests.get(image_url)
 
