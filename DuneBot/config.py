@@ -10,6 +10,8 @@ PREFIX = "!"
 PRODUCTION_BASE_PATH = '/home/ubuntu/DuneBot/DuneBot/'
 DEVELOPMENT_BASE_PATH = 'DuneBot/'
 
+OMDB_API_KEY = os.environ.get("OMDB_API_KEY")
+
 def get_base_path():
     if ENVIRONMENT == "production":
         return PRODUCTION_BASE_PATH

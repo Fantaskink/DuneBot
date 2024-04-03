@@ -1,6 +1,14 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+import requests
+import ebooklib
+from ebooklib import epub
+import urllib.parse
+from bs4 import BeautifulSoup
+from colorthief import ColorThief
+from io import BytesIO
+from config import get_base_path, OMDB_API_KEY
 
 
 class MediaCog(commands.Cog):
@@ -11,8 +19,6 @@ class MediaCog(commands.Cog):
     @app_commands.describe(movie_title="Type in the name of the movie you wish to look up.", year="Type in the year the movie was released.")
     async def kino(self, interaction: discord.Interaction, movie_title: str, year: str) -> None:
         await interaction.response.defer()
-        from media_fetcher import fetch_movie_data
-        from primarycolor import get_primary_hex_color
 
         movie_data = fetch_movie_data(movie_title, year)
 
@@ -57,8 +63,6 @@ class MediaCog(commands.Cog):
     @app_commands.describe(book_title="Type in the name of the book you wish to look up.")
     async def book(self, interaction: discord.Interaction, book_title: str):
         await interaction.response.defer()
-        from media_fetcher import fetch_book_data
-        from primarycolor import get_primary_hex_color
 
         data = fetch_book_data(book_title)
 
@@ -81,7 +85,7 @@ class MediaCog(commands.Cog):
             long_description = data['description']
             short_description = (long_description[:500] + '...') if len(long_description) > 75 else long_description
         
-        color_hex = get_primary_hex_color(thumbnail_url)    
+        color_hex = get_primary_hex_color(thumbnail_url)
 
         discord_embed = discord.Embed(title=title, url=book_link, color=color_hex)
 
@@ -94,6 +98,128 @@ class MediaCog(commands.Cog):
         discord_embed.add_field(name='Rating', value=rating, inline=True)
 
         await interaction.followup.send(embed=discord_embed)
+
+def fetch_movie_data(movie_title, year):
+    base_url = "http://www.omdbapi.com/"
+
+    params = {
+        'apikey': OMDB_API_KEY,
+        't': movie_title,  # You can use 't' for movie title or 'i' for IMDb ID
+        'y': year
+    }
+
+    try:
+        request_url = f"{base_url}?{'&'.join([f'{key}={value}' for key, value in params.items()])}"
+
+        #print("Request URL:", request_url)  # Print the request URL
+
+        response = requests.get(request_url)
+        data = response.json()
+
+        if data['Response'] == 'True':
+            # Movie data fetched successfully
+            return data
+        else:
+            # Handle API response errors
+            print("Error: ", data['Error'])
+            return None
+
+    except Exception as e:
+        return None
+
+
+# Fetches ISBN of the oldest book with the given title
+def fetch_book_data(query):
+    try:
+        book_link = search_title_on_goodreads(query)
+        
+        response = requests.get(book_link)
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        title_header = soup.find(class_="Text Text__title1")
+        author_span = soup.find(class_="ContributorLink__name")
+        rating_div = soup.find(class_="RatingStatistics__rating")
+        thumbnail_img = soup.find(class_="ResponsiveImage")['src']
+        description_span = soup.find(class_="Formatted")
+        details_div = soup.find(class_="FeaturedDetails")
+        p_elements = details_div.find_all('p')
+
+        data = {}
+
+        data['title'] = title_header.text
+        data['author'] = author_span.text
+        data['rating'] = rating_div.text
+        data['thumbnail_url'] = thumbnail_img
+        data['description'] = description_span.text
+        data['page_count'] = [p_elements[0].get_text()]
+        data['publish_date'] = [p_elements[1].get_text()]
+        data['book_link'] = book_link
+
+        return data
+    
+    except Exception as e:
+        print("Exception:", e)
+        return None
+
+
+def search_title_on_goodreads(query):
+    query = urllib.parse.quote_plus(query)
+    search_url = f'https://www.goodreads.com/search?utf8=✓&q={query}&search_type=books&search%5Bfield%5D=on'
+    
+    try:
+        response = requests.get(search_url)
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        table = soup.find('table', class_='tableList')
+
+        anchor = table.find('a')
+
+        href = anchor['href']
+        
+        return 'https://www.goodreads.com' + href
+    except Exception as e:
+        print("Exception:", e)
+        return None
+
+
+def search_in_epub_with_element(search_term, index, element):
+    book_path = f"{get_base_path()}book/dune_{index}.epub"
+
+    book = epub.read_epub(book_path)
+
+    results = []
+
+    for item_id, item in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT)):
+        soup = BeautifulSoup(item.get_body_content(), 'html.parser')
+
+        text = [para.get_text() for para in soup.find_all(element)]
+
+        for line in text:
+            if search_term.lower() in line.lower():
+                if len(line) > 1024: # Truncate the line if it's too long for a discord message
+                    line = line[:1010] + "..."
+                results.append({"results":line, "book_number":index})
+    
+    if results:
+        return results
+    else:
+        return None
+
+
+def get_primary_hex_color(image_url):
+    response = requests.get(image_url)
+
+    color_thief = ColorThief(BytesIO(response.content))
+
+    dominant_color = color_thief.get_color(quality=1)
+
+    # Convert the RGB values to hex
+    primary_hex = '#{:02x}{:02x}{:02x}'.format(*dominant_color)
+    
+    return int(primary_hex[1:], 16)
+
 
 async def setup(bot: commands.Bot) -> None: 
     await bot.add_cog(MediaCog(bot))
