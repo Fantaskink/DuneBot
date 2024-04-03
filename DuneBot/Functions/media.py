@@ -2,13 +2,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import requests
-import ebooklib
-from ebooklib import epub
 import urllib.parse
 from bs4 import BeautifulSoup
 from colorthief import ColorThief
 from io import BytesIO
-from config import get_base_path, OMDB_API_KEY
+from config import OMDB_API_KEY
 
 
 class MediaCog(commands.Cog):
@@ -184,28 +182,7 @@ def search_title_on_goodreads(query):
         return None
 
 
-def search_in_epub_with_element(search_term, index, element):
-    book_path = f"{get_base_path()}book/dune_{index}.epub"
 
-    book = epub.read_epub(book_path)
-
-    results = []
-
-    for item_id, item in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT)):
-        soup = BeautifulSoup(item.get_body_content(), 'html.parser')
-
-        text = [para.get_text() for para in soup.find_all(element)]
-
-        for line in text:
-            if search_term.lower() in line.lower():
-                if len(line) > 1024: # Truncate the line if it's too long for a discord message
-                    line = line[:1010] + "..."
-                results.append({"results":line, "book_number":index})
-    
-    if results:
-        return results
-    else:
-        return None
 
 
 def get_primary_hex_color(image_url):
