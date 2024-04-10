@@ -127,6 +127,7 @@ class AdminCog(commands.Cog):
     @app_commands.command(name="sync", description="Sync commands")
     @app_commands.guild_only()
     @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.default_permissions(ban_members=True)
     async def sync(self, interaction: discord.Interaction) -> None:
         """
         Syncs commands to the Discord API
