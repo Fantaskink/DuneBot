@@ -31,13 +31,12 @@ class AdminCog(commands.Cog):
     @app_commands.command(name="snipe", description="Get deleted messages")
     @app_commands.describe(message_amount="Type in the amount of messages you wish to fetch.")
     @app_commands.guild_only()
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.default_permissions(ban_members=True)
     async def snipe(self, interaction: discord.Interaction, message_amount: int = 1) -> None:
         """
         Retrieves a specified number of deleted messages and sends them in the modlogs channel
         """
-        if not interaction.user.guild_permissions.ban_members:
-            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
-            return
         
         if self.deleted_messages == []:
             await interaction.response.send_message("No deleted messages", ephemeral=True)
@@ -70,11 +69,9 @@ class AdminCog(commands.Cog):
     @app_commands.command(name="editsnipe", description="Get edited messages")
     @app_commands.describe(message_amount="Type in the amount of messages you wish to fetch.")
     @app_commands.guild_only()
-    async def editsnipe(self, interaction: discord.Interaction, message_amount: int = 1) -> None:
-        if not interaction.user.guild_permissions.ban_members:
-            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
-            return
-        
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.default_permissions(ban_members=True)
+    async def editsnipe(self, interaction: discord.Interaction, message_amount: int = 1) -> None:        
         if self.edited_messages == []:
             await interaction.response.send_message("No edited messages found", ephemeral=True)
             return
@@ -106,14 +103,13 @@ class AdminCog(commands.Cog):
     @app_commands.command(name="say", description="Make the bot say a message")
     @app_commands.describe(message="Type in the message you wish the bot to say.", message_id="Type in the id of the message you wish the bot to reply to.")
     @app_commands.guild_only()
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.default_permissions(ban_members=True)
     async def say(self, interaction: discord.Interaction, message: str, message_id: str = None) -> None:
         """
         Command that takes a message as an argument and makes the bot say it. 
         Optional message link argument to make the bot reply to any message
         """
-        if not interaction.user.guild_permissions.ban_members:
-            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
-            return
         
         await interaction.response.send_message("Alright boss", ephemeral=True)
 
