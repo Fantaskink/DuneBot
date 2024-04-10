@@ -35,6 +35,9 @@ class HOFCog(commands.Cog):
 
         reaction_message = await reaction_channel.fetch_message(payload.message_id)
 
+        if reaction_message is None:
+            return
+
         has_required_reactions = False
 
         for reaction in reaction_message.reactions:
