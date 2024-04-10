@@ -2,12 +2,15 @@ import discord
 from discord.ext import commands
 from config import ENVIRONMENT
 
+happy_herbert_required_reactions = 5
+required_reactions = 10
+
 class HOFCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
         ignored_channels = []
 
         channel_ids = {
@@ -45,10 +48,10 @@ class HOFCog(commands.Cog):
 
         for reaction in reaction_message.reactions:
             if isinstance(reaction.emoji, str):
-                if reaction.count >= 10:
+                if reaction.count >= required_reactions:
                     has_required_reactions = True
                     break
-            elif reaction.emoji.name == "happyherbert" and reaction.count >= 5:
+            elif reaction.emoji.name == "happyherbert" and reaction.count >= happy_herbert_required_reactions:
                 has_required_reactions = True
                 break
             elif reaction.count >= 10:

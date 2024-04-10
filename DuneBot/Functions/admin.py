@@ -33,7 +33,7 @@ class AdminCog(commands.Cog):
     @app_commands.guild_only()
     async def snipe(self, interaction: discord.Interaction, message_amount: int = 1) -> None:
         """
-        Retrieves deleted messages and sends them in the modlogs channel
+        Retrieves a specified number of deleted messages and sends them in the modlogs channel
         """
         if not interaction.user.guild_permissions.ban_members:
             await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
@@ -126,13 +126,11 @@ class AdminCog(commands.Cog):
 
     @app_commands.command(name="sync", description="Sync commands")
     @app_commands.guild_only()
+    @app_commands.checks.has_permissions(ban_members=True)
     async def sync(self, interaction: discord.Interaction) -> None:
         """
         Syncs commands to the Discord API
         """
-        if not interaction.user.guild_permissions.ban_members:
-            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
-            return
         
         await interaction.response.send_message("Syncing commands", ephemeral=True)
         await self.bot.tree.sync()

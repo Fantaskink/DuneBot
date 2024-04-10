@@ -16,14 +16,14 @@ class NitroCog(commands.Cog):
     
 
     @tasks.loop(hours=1)
-    async def handle_boosters_task(self):
+    async def handle_boosters_task(self) -> None:
         await self.handle_boosters()
     
 
     @app_commands.command(name="get_booster_role")
     @app_commands.describe(role_name="Type in the name of the role you wish to create.", hex_code="Type in the hex code of the color you wish the role to be.")
     @app_commands.guild_only()
-    async def get_booster_role(self, interaction: discord.Interaction, role_name: str, hex_code: str):
+    async def get_booster_role(self, interaction: discord.Interaction, role_name: str, hex_code: str) -> None:
         print(role_name, hex_code)
         # Terminate if the color is not a valid hex code
         if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', hex_code):
@@ -73,7 +73,7 @@ class NitroCog(commands.Cog):
             await interaction.response.send_message("Booster role updated", ephemeral=True)
     
 
-    async def handle_boosters(self):
+    async def handle_boosters(self) -> None:
         guild = self.bot.guilds[0]
         booster_ids = get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
         boosters = guild.premium_subscribers # List of all the server's boosters
@@ -114,7 +114,7 @@ class NitroCog(commands.Cog):
     
 
 
-def is_new_booster(user_id):
+def is_new_booster(user_id) -> bool:
     if not os.path.exists(BOOSTER_CSV_PATH) or os.path.getsize(BOOSTER_CSV_PATH) == 0:
         print("File is empty or doesn't exist")
         return True
@@ -129,7 +129,7 @@ def is_new_booster(user_id):
         return True
 
 
-def write_booster_to_csv(user_id, role_id):
+def write_booster_to_csv(user_id, role_id) -> None:
     with open(BOOSTER_CSV_PATH, 'a') as booster_file:
         csv_writer = csv.writer(booster_file)
 
@@ -138,7 +138,7 @@ def write_booster_to_csv(user_id, role_id):
     return
 
 
-def get_booster_role_id(user_id):
+def get_booster_role_id(user_id) -> str:
     with open(BOOSTER_CSV_PATH, 'r') as stats_file:
         csv_reader = csv.reader(stats_file)
 
@@ -147,7 +147,7 @@ def get_booster_role_id(user_id):
                 return row[1]
         return None
 
-def get_booster_ids():
+def get_booster_ids() -> list[str]:
     booster_ids = []
 
     with open(BOOSTER_CSV_PATH, 'r') as stats_file:
@@ -158,12 +158,12 @@ def get_booster_ids():
     return booster_ids
 
 
-def add_pinged_booster(user: discord.Member):
+def add_pinged_booster(user: discord.Member) -> None:
     with open(PINGED_BOOSTER_CSV_PATH, 'a') as csv_file:
         csv_file.write(str(user.id) + ",\n")
 
 
-def has_been_pinged(user: discord.Member):
+def has_been_pinged(user: discord.Member) -> bool:
     with open(PINGED_BOOSTER_CSV_PATH, 'r') as csv_file:
         csv_reader = csv.reader(csv_file)
 

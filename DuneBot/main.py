@@ -22,7 +22,7 @@ async def on_ready():
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(cog, exc))
 
-    #print(f'{bot.user} is now running.')
+bot.run(TOKEN)
 
 """
 async def update_presence():
@@ -32,9 +32,6 @@ async def update_presence():
 
     activity = discord.CustomActivity(name=days_until_string)
     await bot.change_presence(activity=activity)
-    
-
-
     
 
 async def get_days_until_string(target_date_str, time_str):
@@ -60,36 +57,4 @@ async def get_days_until_string(target_date_str, time_str):
         return(f"Dune Part Two OUT NOW!")
     
     return(f"{days_until} days until Dune Part Two")
-
-
-
-"""
-
-bot.run(TOKEN)
-
-"""
-@bot.tree.command(name="encyclopedia")
-@app_commands.describe(keyword="Type in the name of the entry you wish to look up.")
-async def encyclopedia(interaction: discord.Interaction, keyword: str):
-    file_path = base_path + 'csv/encyclopedia.csv'
-
-    with open(file_path, 'r', newline='') as csvfile:
-        csv_reader = csv.reader(csvfile, skipinitialspace=False)
-
-        for row in csv_reader:
-            if row:
-                if row[0].lower() == keyword.lower():
-                    page_count = len(row) - 1
-                    view = Pages(page_count)
-                    await interaction.response.send_message(row[1], view=view)
-                    await view.wait()
-                    if view.index is None:
-                        await interaction.response.edit_message(view=view)
-                    elif view.index:
-                        print("index" + str(view.index))
-                        await interaction.response.edit_message(view=view)
-                    else:
-                        print('Cancelled...')
-
-    await interaction.response.send_message(f"Entry not found.", ephemeral=True)
 """

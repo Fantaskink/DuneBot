@@ -12,7 +12,7 @@ class MiscCog(commands.Cog):
     
 
     @tasks.loop(hours=1)
-    async def update_presence_task(self):
+    async def update_presence_task(self) -> None:
         quote = get_random_quote()
         activity = discord.CustomActivity(name=quote)
         await self.bot.change_presence(activity=activity)
@@ -21,7 +21,8 @@ class MiscCog(commands.Cog):
     @app_commands.command(name="pfp")
     @app_commands.describe(user="Type in the name of the user whose profile picture you wish to see.")
     @app_commands.guild_only()
-    async def pfp(self, interaction: discord.Interaction, user: discord.User):
+    async def pfp(self, interaction: discord.Interaction, user: discord.User) -> None:
+        """Get the profile picture of a user."""
         try:
             url = user.avatar.url
             await interaction.response.send_message(url)
@@ -29,7 +30,7 @@ class MiscCog(commands.Cog):
             await interaction.response.send_message("This user has no profile picture.")
 
 
-def get_random_quote():
+def get_random_quote() -> str:
     quotes = [
         "The mystery of life isn't a problem to solve, but a reality to experience.",
         "What do you despise? By this are you truly known.",
