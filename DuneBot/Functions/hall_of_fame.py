@@ -33,6 +33,9 @@ class HOFCog(commands.Cog):
 
         reaction_channel = self.bot.guilds[0].get_channel(payload.channel_id)
 
+        if reaction_channel is None:
+            return
+
         reaction_message = await reaction_channel.fetch_message(payload.message_id)
 
         if reaction_message is None:
