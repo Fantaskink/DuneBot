@@ -85,6 +85,8 @@ class AdminCog(commands.Cog):
                 break
             else:
                 before, after = union
+                if before.content == after.content:
+                    continue
                 description = f"Message edited in {before.channel.mention}"
                 color = discord.Colour.gold()
                 name = before.author.display_name
