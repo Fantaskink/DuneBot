@@ -54,7 +54,7 @@ class HOFCog(commands.Cog):
             elif reaction.emoji.name == "happyherbert" and reaction.count >= happy_herbert_required_reactions:
                 has_required_reactions = True
                 break
-            elif reaction.count >= 10:
+            elif reaction.count >= required_reactions:
                 has_required_reactions = True
                 break
         
