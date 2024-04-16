@@ -5,6 +5,8 @@ from config import get_base_path
 import os
 import csv
 import re
+import sqlite3
+from contextlib import closing
 
 BOOSTER_CSV_PATH = get_base_path() + 'csv/boosters.csv'
 PINGED_BOOSTER_CSV_PATH = get_base_path() + 'csv/pinged_boosters.csv'
@@ -12,12 +14,12 @@ PINGED_BOOSTER_CSV_PATH = get_base_path() + 'csv/pinged_boosters.csv'
 class NitroCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.handle_boosters_task.start()
+        #self.handle_boosters_task.start()
     
 
-    @tasks.loop(hours=1)
-    async def handle_boosters_task(self) -> None:
-        await self.handle_boosters()
+    #@tasks.loop(hours=1)
+    #async def handle_boosters_task(self) -> None:
+        #await self.handle_boosters()
     
 
     @app_commands.command(name="get_booster_role")
@@ -109,6 +111,19 @@ class NitroCog(commands.Cog):
 
                 await general_chat.send(f"Thank you for boosting the server {booster.mention}! Use /get_booster_role to set up a custom role.")
                 add_pinged_booster(booster)
+    
+
+    @app_commands.command(name="setup_database")
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.default_permissions(administrator=True)
+    async def setup_database(self, interaction: discord.Interaction) -> None:
+        with closing(sqlite3.connect(get_base_path() + 'db/boosters.db')) as conn:
+            conn.execute("CREATE TABLE IF NOT EXISTS custom_roles (user_id INTEGER PRIMARY KEY, role_id INTEGER)")
+            conn.execute("CREATE TABLE IF NOT EXISTS pinged_boosters (user_id INTEGER PRIMARY KEY)")
+            conn.commit()
+        
+        await interaction.response.send_message("Database setup complete", ephemeral=True)
     
     
     
