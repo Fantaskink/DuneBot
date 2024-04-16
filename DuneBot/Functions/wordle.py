@@ -349,7 +349,7 @@ def get_win_percentage(user_id: str):
             return round(win_rate, 2)
 
 
-def setup_db():
+def setup_db() -> None:
     conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
 
     c = conn.cursor()
@@ -409,6 +409,9 @@ def setup_db():
     with open(PLAYER_STATS_PATH, 'r') as file:
         for line in file:
             user_id, games_won, games_lost = line.strip().split(',')
+            user_id = int(user_id)
+            games_won = int(games_won)
+            games_lost = int(games_lost)
             c.execute("INSERT INTO player_stats (user_id, games_won, games_lost) VALUES (?, ?, ?, ?, ?, ?, ?)", (user_id, 0, games_won, games_lost, 0, 0, 0))
 
 
