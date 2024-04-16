@@ -419,10 +419,9 @@ def setup_db() -> None:
     
     player_stats = c.execute("SELECT * FROM player_stats")
 
-    
-
+    player_stats = c.fetchall()
 
     conn.commit()
     conn.close()
 
-    return player_stats.fetchall()
+    return player_stats
