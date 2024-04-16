@@ -157,13 +157,13 @@ async def setup(bot: commands.Bot) -> None:
 
 
 def get_valid_guesses() -> List[str]:
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
-    c = conn.cursor()
+    with sqlite3.connect(get_base_path() + '/db/wordle.db') as conn:
+        c = conn.cursor()
+        c.execute("SELECT word FROM valid_guesses")
+        valid_guesses_tuples = c.fetchall()
 
-    c.execute("SELECT word FROM valid_guesses")
-    valid_guesses = c.fetchall()
-
-    conn.close()
+    # Extract strings from tuples
+    valid_guesses = [t[0] for t in valid_guesses_tuples]
 
     return valid_guesses
 
