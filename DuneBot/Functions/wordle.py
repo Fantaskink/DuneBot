@@ -4,12 +4,7 @@ from discord.ext import commands
 import sqlite3
 from typing import Union, List
 from config import get_base_path
-
-
-DUNE_SOLUTIONS_PATH = 'wordle/dune_solutions.csv'
-VALID_GUESSES_PATH = 'wordle/valid_guesses.csv'
-VALID_SOLUTIONS_PATH = 'wordle/valid_solutions.csv'
-PLAYER_STATS_PATH = 'wordle/player_stats.csv'
+from contextlib import closing
 
 
 def get_random_solution(dune_mode: bool) -> Union[str, None]:
@@ -154,15 +149,6 @@ class WordleCog(commands.GroupCog, name="wordle"):
             await interaction.response.send_message(f"{player.display_name} has {wins} wins and {losses} losses.\n Win rate: {win_rate}%")
         else:
             await interaction.response.send_message(f"{player.display_name} has not played any wordle games")
-    
-
-    @app_commands.command(name='setup_database', description="Setup the wordle database.")
-    @app_commands.guild_only()
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.default_permissions(ban_members=True)
-    async def setup_database(self, interaction: discord.Interaction) -> None:
-        stats = setup_db()
-        await interaction.response.send_message(str(stats))
 
 
 
@@ -182,7 +168,6 @@ def get_valid_guesses() -> List[str]:
     return valid_guesses
 
 
-
 def get_all_solutions() -> List[str]:
     # Get standard solutions
     conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
@@ -196,7 +181,6 @@ def get_all_solutions() -> List[str]:
     # Return solutions
 
     return standard_solutions
-
 
 
 def check_guess(guess: str, game: wordle_game) -> str:
@@ -225,42 +209,27 @@ def check_guess(guess: str, game: wordle_game) -> str:
     return output_string
 
 
+def execute_query(query: str, params: tuple = None) -> Union[List[tuple], None]:
+    with closing(sqlite3.connect(get_base_path() + '/db/wordle.db')) as conn, conn.cursor() as cursor:
+        cursor.execute(query, params or ())
+        return cursor.fetchall()
+
+
 def player_in_stats(user_id) -> bool:
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
-    c = conn.cursor()
-
-    c.execute("SELECT user_id FROM player_stats WHERE user_id = ?", (user_id,))
-
-    result = c.fetchone()
-    conn.close()
-
-    if result is None:
-        return False
-    else:
-        return True
+    result = execute_query("SELECT user_id FROM player_stats WHERE user_id = ?", (user_id,))
+    return result is not None
     
 
 def player_win_game(user_id: str) -> None:
-    # If player is not in stats.csv, add them
+    # If player is not in player_stats table, add them
     if not player_in_stats(str(user_id)):
         add_player_to_stats(user_id)
-    
+
     # Update player_stats table and add 1 to games_won column
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
-    c = conn.cursor()
-
-    c.execute("SELECT games_won FROM player_stats WHERE user_id = ?", (user_id,))
-
-    result = c.fetchone()
-
-    if result is None:
-        return
-    else:
-        games_won = result[0]
-        games_won += 1
-        c.execute("UPDATE player_stats SET games_won = ? WHERE user_id = ?", (games_won, user_id))
+    with sqlite3.connect(get_base_path() + '/db/wordle.db') as conn:
+        c = conn.cursor()
+        c.execute("UPDATE player_stats SET games_won = games_won + 1 WHERE user_id = ?", (user_id,))
         conn.commit()
-        conn.close()
 
 
 def player_lose_game(user_id: str) -> None:
@@ -269,159 +238,35 @@ def player_lose_game(user_id: str) -> None:
         add_player_to_stats(user_id)
 
     # Update player_stats table and add 1 to games_lost column
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
-    c = conn.cursor()
-
-    c.execute("SELECT games_lost FROM player_stats WHERE user_id = ?", (user_id,))
-    result = c.fetchone()
-
-    if result is None:
-        return
-    else:
-        games_lost = result[0]
-        games_lost += 1
-        c.execute("UPDATE player_stats SET games_lost = ? WHERE user_id = ?", (games_lost, user_id))
+    with sqlite3.connect(get_base_path() + '/db/wordle.db') as conn:
+        c = conn.cursor()
+        c.execute("UPDATE player_stats SET games_lost = games_lost + 1 WHERE user_id = ?", (user_id,))
         conn.commit()
-        conn.close()
 
 
-def add_player_to_stats(user_id: str):
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
+def add_player_to_stats(user_id: str) -> None:
+    execute_query("INSERT INTO player_stats (user_id, games_won, games_lost) VALUES (?, 0, 0)", (user_id,))
 
-    c = conn.cursor()
-
-    c.execute("INSERT INTO player_stats (user_id, games_played, games_won, games_lost, total_guesses, correct_guesses, incorrect_guesses) VALUES (?, ?, ?, ?, ?, ?, ?)", (user_id, 0, 0, 0, 0, 0, 0))
 
 
 def get_wins(user_id: str) -> Union[int, None]:
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
-
-    c = conn.cursor()
-
-    c.execute("SELECT games_won FROM player_stats WHERE user_id = ?", (user_id,))
-
-    result = c.fetchone()
-    conn.close()
-
-    if result is None:
-        return None
-    else:
-        return result[0]
+    result = execute_query("SELECT games_won FROM player_stats WHERE user_id = ?", (user_id,))
+    return result[0][0] if result else None
 
 
 def get_losses(user_id: str) -> Union[int, None]:
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
-
-    c = conn.cursor()
-
-    c.execute("SELECT games_lost FROM player_stats WHERE user_id = ?", (user_id,))
-
-    result = c.fetchone()
-    conn.close()
-
-    if result is None:
-        return None
-    else:
-        return result[0]
+    result = execute_query("SELECT games_lost FROM player_stats WHERE user_id = ?", (user_id,))
+    return result[0][0] if result else None
 
 
 def get_win_percentage(user_id: str) -> Union[float, None]:
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
+    wins = get_wins(user_id)
+    losses = get_losses(user_id)
 
-    c = conn.cursor()
-
-    c.execute("SELECT games_won, games_lost FROM player_stats WHERE user_id = ?", (user_id,))
-
-    result = c.fetchone()
-    conn.close()
-
-    if result is None:
+    if wins is None or losses is None:
         return None
-    else:
-        wins = result[0]
-        losses = result[1]
-        total_games = wins + losses
 
-        if total_games == 0:
-            return 0
-        else:
-            win_rate = (wins / total_games) * 100
-            return round(win_rate, 2)
+    if losses == 0:
+        return 100.0
 
-
-def setup_db() -> None:
-    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
-
-    c = conn.cursor()
-
-    # Drop all tables but sql_sequence
-    result = c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_sequence';")
-    tables = result.fetchall()
-
-    for table in tables:
-        c.execute(f"DROP TABLE {table[0]}")
-
-    # Create solutions table
-    c.execute(""" CREATE TABLE standard_solutions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word TEXT
-            )""")
-
-    # Create a dune solutions table
-    c.execute(""" CREATE TABLE dune_solutions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word TEXT
-            )""")
-
-    c.execute(""" CREATE TABLE valid_guesses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word TEXT
-            )""")
-
-    # Create player stats table
-    c.execute(""" CREATE TABLE player_stats (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                games_played INTEGER,
-                games_won INTEGER,
-                games_lost INTEGER,
-                total_guesses INTEGER,
-                correct_guesses INTEGER,
-                incorrect_guesses INTEGER
-                )"""
-    )
-
-    # Add standard solutions to the standard solutions table
-    with open(VALID_SOLUTIONS_PATH, 'r') as file:
-        for line in file:
-            c.execute("INSERT INTO standard_solutions (word) VALUES (?)", (line.strip(),))
-
-    # Add dune solutions to the dune solutions table
-    with open(DUNE_SOLUTIONS_PATH, 'r') as file:
-        for line in file:
-            c.execute("INSERT INTO dune_solutions (word) VALUES (?)", (line.strip(),))
-
-    # Add valid guesses to the valid guesses table
-    with open(VALID_GUESSES_PATH, 'r') as file:
-        for line in file:
-            c.execute("INSERT INTO valid_guesses (word) VALUES (?)", (line.strip(),))
-
-    # Add player stats to the player stats table
-    with open(PLAYER_STATS_PATH, 'r') as file:
-        for line in file:
-            user_id, games_won, games_lost = line.strip().split(',')
-            user_id = int(user_id)
-            games_won = int(games_won)
-            games_lost = int(games_lost)
-            c.execute("INSERT INTO player_stats (user_id, games_played, games_won, games_lost, total_guesses, correct_guesses, incorrect_guesses) VALUES (?, ?, ?, ?, ?, ?, ?)", (user_id, 0, games_won, games_lost, 0, 0, 0))
-
-        
-    
-    player_stats = c.execute("SELECT * FROM player_stats")
-
-    player_stats = c.fetchall()
-
-    conn.commit()
-    conn.close()
-
-    return player_stats
+    return round(wins / (wins + losses) * 100, 2)
