@@ -157,7 +157,7 @@ async def setup(bot: commands.Bot) -> None:
 
 
 def get_valid_guesses() -> List[str]:
-    with sqlite3.connect(get_base_path() + '/db/wordle.db') as conn:
+    with sqlite3.connect(get_base_path() + 'db/wordle.db') as conn:
         c = conn.cursor()
         c.execute("SELECT word FROM valid_guesses")
         valid_guesses_tuples = c.fetchall()
@@ -226,7 +226,7 @@ def player_win_game(user_id: str) -> None:
         add_player_to_stats(user_id)
 
     # Update player_stats table and add 1 to games_won column
-    with sqlite3.connect(get_base_path() + '/db/wordle.db') as conn:
+    with sqlite3.connect(get_base_path() + 'db/wordle.db') as conn:
         c = conn.cursor()
         c.execute("UPDATE player_stats SET games_won = games_won + 1 WHERE user_id = ?", (user_id,))
         conn.commit()
@@ -238,7 +238,7 @@ def player_lose_game(user_id: str) -> None:
         add_player_to_stats(user_id)
 
     # Update player_stats table and add 1 to games_lost column
-    with sqlite3.connect(get_base_path() + '/db/wordle.db') as conn:
+    with sqlite3.connect(get_base_path() + 'db/wordle.db') as conn:
         c = conn.cursor()
         c.execute("UPDATE player_stats SET games_lost = games_lost + 1 WHERE user_id = ?", (user_id,))
         conn.commit()
