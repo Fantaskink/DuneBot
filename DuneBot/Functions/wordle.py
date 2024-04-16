@@ -210,7 +210,7 @@ def check_guess(guess: str, game: wordle_game) -> str:
 
 
 def execute_query(query: str, params: tuple = None) -> Union[List[tuple], None]:
-    with closing(sqlite3.connect(get_base_path() + '/db/wordle.db')) as conn, conn.cursor() as cursor:
+    with closing(sqlite3.connect(get_base_path() + 'db/wordle.db')) as conn, conn.cursor() as cursor:
         cursor.execute(query, params or ())
         return cursor.fetchall()
 
