@@ -161,8 +161,8 @@ class WordleCog(commands.GroupCog, name="wordle"):
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.default_permissions(ban_members=True)
     async def setup_database(self, interaction: discord.Interaction) -> None:
-        setup_db()
-        await interaction.response.send_message("Database setup complete.")
+        stats = setup_db()
+        await interaction.response.send_message(str(stats))
 
 
 
@@ -170,7 +170,7 @@ async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(WordleCog(bot))
 
 
-def get_valid_guesses():
+def get_valid_guesses() -> List[str]:
     conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
     c = conn.cursor()
 
@@ -183,7 +183,7 @@ def get_valid_guesses():
 
 
 
-def get_all_solutions():
+def get_all_solutions() -> List[str]:
     # Get standard solutions
     conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
 
@@ -199,7 +199,7 @@ def get_all_solutions():
 
 
 
-def check_guess(guess: str, game: wordle_game):
+def check_guess(guess: str, game: wordle_game) -> str:
     solution = game.word
     solution_length = len(game.word)
     output = ["_" for _ in range(solution_length)]
@@ -240,7 +240,7 @@ def player_in_stats(user_id) -> bool:
         return True
     
 
-def player_win_game(user_id: str):
+def player_win_game(user_id: str) -> None:
     # If player is not in stats.csv, add them
     if not player_in_stats(str(user_id)):
         add_player_to_stats(user_id)
@@ -263,7 +263,7 @@ def player_win_game(user_id: str):
         conn.close()
 
 
-def player_lose_game(user_id: str):
+def player_lose_game(user_id: str) -> None:
     # If player is not in player_stats table, add them
     if not player_in_stats(str(user_id)):
         add_player_to_stats(user_id)
@@ -293,7 +293,7 @@ def add_player_to_stats(user_id: str):
     c.execute("INSERT INTO player_stats (user_id, games_played, games_won, games_lost, total_guesses, correct_guesses, incorrect_guesses) VALUES (?, ?, ?, ?, ?, ?, ?)", (user_id, 0, 0, 0, 0, 0, 0))
 
 
-def get_wins(user_id: str):
+def get_wins(user_id: str) -> Union[int, None]:
     conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
 
     c = conn.cursor()
@@ -309,7 +309,7 @@ def get_wins(user_id: str):
         return result[0]
 
 
-def get_losses(user_id: str):
+def get_losses(user_id: str) -> Union[int, None]:
     conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
 
     c = conn.cursor()
@@ -325,7 +325,7 @@ def get_losses(user_id: str):
         return result[0]
 
 
-def get_win_percentage(user_id: str):
+def get_win_percentage(user_id: str) -> Union[float, None]:
     conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
 
     c = conn.cursor()
