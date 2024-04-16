@@ -310,7 +310,7 @@ def get_wins(user_id: str):
 
 
 def get_losses(user_id: str):
-    conn = sqlite3.connect(get_base_path + '/db/wordle.db')
+    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
 
     c = conn.cursor()
 
@@ -326,7 +326,7 @@ def get_losses(user_id: str):
 
 
 def get_win_percentage(user_id: str):
-    conn = sqlite3.connect(get_base_path + '/db/wordle.db')
+    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
 
     c = conn.cursor()
 
@@ -350,7 +350,7 @@ def get_win_percentage(user_id: str):
 
 
 def setup_db():
-    conn = sqlite3.connect(get_base_path + '/db/wordle.db')
+    conn = sqlite3.connect(get_base_path() + '/db/wordle.db')
 
     c = conn.cursor()
 
