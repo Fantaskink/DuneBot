@@ -354,7 +354,8 @@ def setup_db() -> None:
 
     c = conn.cursor()
 
-    result = c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    # Drop all tables but sql_sequence
+    result = c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_sequence';")
     tables = result.fetchall()
 
     for table in tables:
