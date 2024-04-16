@@ -415,6 +415,14 @@ def setup_db() -> None:
             games_lost = int(games_lost)
             c.execute("INSERT INTO player_stats (user_id, games_played, games_won, games_lost, total_guesses, correct_guesses, incorrect_guesses) VALUES (?, ?, ?, ?, ?, ?, ?)", (user_id, 0, games_won, games_lost, 0, 0, 0))
 
+        
+    
+    player_stats = c.execute("SELECT * FROM player_stats")
+
+    
+
 
     conn.commit()
     conn.close()
+
+    return player_stats.fetchall()
