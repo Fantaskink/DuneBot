@@ -121,6 +121,21 @@ class NitroCog(commands.Cog):
         with closing(sqlite3.connect(get_base_path() + 'db/boosters.db')) as conn:
             conn.execute("CREATE TABLE IF NOT EXISTS custom_roles (user_id INTEGER PRIMARY KEY, role_id INTEGER)")
             conn.execute("CREATE TABLE IF NOT EXISTS pinged_boosters (user_id INTEGER PRIMARY KEY)")
+
+            # Insert every pinged booster id into the pinged_boosters table
+            with open(PINGED_BOOSTER_CSV_PATH, 'r') as csv_file:
+                csv_reader = csv.reader(csv_file)
+
+                for row in csv_reader:
+                    conn.execute("INSERT INTO pinged_boosters (user_id) VALUES (?)", (int(row[0]),))
+            
+            # Insert every booster id and role id into the custom_roles table
+            with open(BOOSTER_CSV_PATH, 'r') as csv_file:
+                csv_reader = csv.reader(csv_file)
+
+                for row in csv_reader:
+                    conn.execute("INSERT INTO custom_roles (user_id, role_id) VALUES (?, ?)", (int(row[0]), int(row[1])))
+                                 
             conn.commit()
         
         await interaction.response.send_message("Database setup complete", ephemeral=True)
