@@ -115,8 +115,8 @@ class NitroCog(commands.Cog):
 
     @app_commands.command(name="setup_database")
     @app_commands.guild_only()
-    @app_commands.checks.has_permissions(administrator=True)
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.default_permissions(ban_members=True)
     async def setup_database(self, interaction: discord.Interaction) -> None:
         with closing(sqlite3.connect(get_base_path() + 'db/boosters.db')) as conn:
             conn.execute("CREATE TABLE IF NOT EXISTS custom_roles (user_id INTEGER PRIMARY KEY, role_id INTEGER)")
