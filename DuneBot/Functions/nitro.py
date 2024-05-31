@@ -14,12 +14,12 @@ PINGED_BOOSTER_CSV_PATH = get_base_path() + 'csv/pinged_boosters.csv'
 class NitroCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        #self.handle_boosters_task.start()
+        self.handle_boosters_task.start()
     
 
-    #@tasks.loop(hours=1)
-    #async def handle_boosters_task(self) -> None:
-        #await self.handle_boosters()
+    @tasks.loop(hours=1)
+    async def handle_boosters_task(self) -> None:
+        await self.handle_boosters()
     
 
     @app_commands.command(name="get_booster_role")
