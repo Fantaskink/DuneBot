@@ -7,7 +7,7 @@ ENVIRONMENT = os.environ.get("ENVIRONMENT")
 MODLOG_CHANNEL_ID = int(os.environ.get("MODLOG_CHANNEL_ID"))
 TOKEN = os.environ.get("TOKEN")
 PREFIX = "!"
-PRODUCTION_BASE_PATH = '/home/ubuntu/DuneBot/DuneBot/'
+PRODUCTION_BASE_PATH = '/home/andreas/DiscordBots/DuneBot/DuneBot/'
 DEVELOPMENT_BASE_PATH = 'DuneBot/'
 
 OMDB_API_KEY = os.environ.get("OMDB_API_KEY")
