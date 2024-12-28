@@ -5,8 +5,6 @@ from config import get_base_path
 import os
 import csv
 import re
-import sqlite3
-from contextlib import closing
 
 BOOSTER_CSV_PATH = get_base_path() + 'csv/boosters.csv'
 PINGED_BOOSTER_CSV_PATH = get_base_path() + 'csv/pinged_boosters.csv'
@@ -80,6 +78,8 @@ class NitroCog(commands.Cog):
         booster_ids = get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
         boosters = guild.premium_subscribers # List of all the server's boosters
 
+        delete_removed_roles(self)
+
         for user_id in booster_ids:
             user = guild.get_member(int(user_id))
         
@@ -114,28 +114,27 @@ class NitroCog(commands.Cog):
                 add_pinged_booster(booster)
     
 
-    @app_commands.command(name="setup_database")
-    @app_commands.guild_only()
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.default_permissions(ban_members=True)
-    async def setup_database(self, interaction: discord.Interaction) -> None:
-        with closing(sqlite3.connect(get_base_path() + 'db/boosters.db')) as conn:
-            conn.execute("CREATE TABLE IF NOT EXISTS custom_roles (user_id INTEGER PRIMARY KEY, role_id INTEGER)")
-            
-            # Insert every booster id and role id into the custom_roles table
-            with open(BOOSTER_CSV_PATH, 'r') as csv_file:
-                csv_reader = csv.reader(csv_file)
 
-                for row in csv_reader:
-                    conn.execute("INSERT INTO custom_roles (user_id, role_id) VALUES (?, ?)", (int(row[0]), int(row[1])))
-                                 
-            conn.commit()
-        
-        await interaction.response.send_message("Database setup complete", ephemeral=True)
     
     
-    
+def delete_removed_roles(self) -> None:
+    # Open csv file, delete each row where the role id does not exist in the server
+    with open(BOOSTER_CSV_PATH, 'r') as stats_file:
+        csv_reader = csv.reader(stats_file)
+        rows = list(csv_reader)
 
+    with open(BOOSTER_CSV_PATH, 'w') as stats_file:
+        csv_writer = csv.writer(stats_file)
+
+        for row in rows:
+            user_id = row[0]
+            role_id = row[1]
+
+            guild = self.bot.guilds[0]
+            role = discord.utils.get(guild.roles, id=int(role_id))
+
+            if role is not None:
+                csv_writer.writerow([user_id, role_id])
 
 def is_new_booster(user_id) -> bool:
     if not os.path.exists(BOOSTER_CSV_PATH) or os.path.getsize(BOOSTER_CSV_PATH) == 0:
