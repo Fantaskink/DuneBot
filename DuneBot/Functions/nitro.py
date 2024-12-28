@@ -92,7 +92,8 @@ class NitroCog(commands.Cog):
                 role_id = get_booster_role_id(user_id)
                 role = discord.utils.get(guild.roles, id=int(role_id))
 
-                await user.remove_roles(role, reason="Booster role")
+                if role is not None:
+                    await user.remove_roles(role, reason="Booster role")
             
             # If the user has previously boosted and set up a custom role and has started boosting again
             if user in boosters:
