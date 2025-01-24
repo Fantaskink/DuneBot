@@ -36,6 +36,10 @@ class NitroCog(commands.Cog):
             user_id = row[0]
             role_id = row[1]
 
+            # If role_id is already present in the database, skip
+            if db_client[DB_NAME]["Boosters"].find_one({"role_id": role_id}):
+                continue
+
             role = discord.utils.get(interaction.guild.roles, id=int(role_id))
             role_name = role.name
             role_color = role.color
