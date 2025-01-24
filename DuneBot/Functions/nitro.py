@@ -21,6 +21,8 @@ class NitroCog(commands.Cog):
 
     @app_commands.command(name="upload_boosters")
     @app_commands.guild_only()
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.default_permissions(ban_members=True)
     async def upload_boosters(self, interaction: discord.Interaction) -> None:
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
