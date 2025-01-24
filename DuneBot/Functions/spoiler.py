@@ -1,10 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import csv
 import re
 from typing import List
-from config import MODLOG_CHANNEL_ID, ENVIRONMENT, db_client, DB_NAME
+from config import MODLOG_CHANNEL_ID, db_client, DB_NAME
 
 
 async def keyword_autocomplete( 
