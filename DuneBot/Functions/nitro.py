@@ -61,8 +61,6 @@ class NitroCog(commands.Cog):
             role_id = get_booster_role_id(interaction.user.id)
             booster_role = discord.utils.get(interaction.guild.roles, id=int(role_id))
 
-            booster_role: discord.Role
-
             await booster_role.edit(name=role_name, color=role_color)
 
             await interaction.response.send_message("Booster role updated", ephemeral=True)
@@ -90,8 +88,9 @@ class NitroCog(commands.Cog):
 
                 if role is not None and role in user.roles:
                     await role.delete(reason="Boost expired")
+                continue
             
-            # If the user has previously boosted and set up a custom role and has started boosting again
+            # If the user has previously set up a role, check if the role exists
             if user in boosters:
                 # Create role again from database if it does not exist
                 role_data = get_role_data(user_id)
@@ -117,14 +116,13 @@ class NitroCog(commands.Cog):
                     # Update the role id in the database
                     db_client["Boosters"].update_one({"user_id": user_id}, {"$set": {"role_id": role.id}})
                 else:
-                    pass
+                    continue
 
 
         # Ping users that do not have a custom role and have not been pinged already
         for booster in boosters:
             if not has_been_pinged(booster):
-                general_chat = self.bot.guilds[0].get_channel(701674250591010840)
-                general_chat: discord.TextChannel
+                general_chat = self.bot.guilds[0].get_channel(701674250591010840) # wtf why is this hardcoded, switch to default channel
 
                 await general_chat.send(f"Thank you for boosting the server {booster.name}! Use ``/get_booster_role`` to set up a custom role.", )
                 add_pinged_booster(booster)
@@ -143,6 +141,7 @@ def add_booster_to_db(user_id: int, role_id: int, role_name: str, color_hex: str
 def get_booster_role_id(user_id) -> str:
     booster = db_client["Boosters"].find_one({"user_id": user_id})
     return booster["role_id"]
+
 
 def get_booster_ids() -> List[int]:
     boosters = db_client["Boosters"].find()
