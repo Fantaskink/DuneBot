@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-from config import get_base_path
+from config import get_base_path, db_client, DB_NAME
 import os
 import csv
 import re
@@ -18,6 +18,33 @@ class NitroCog(commands.Cog):
     @tasks.loop(minutes=5)
     async def handle_boosters_task(self) -> None:
         await self.handle_boosters()
+
+    @app_commands.command(name="upload_boosters")
+    @app_commands.guild_only()
+    async def upload_boosters(self, interaction: discord.Interaction) -> None:
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+            return
+        
+        with open(BOOSTER_CSV_PATH, 'r') as stats_file:
+            csv_reader = csv.reader(stats_file)
+            rows = list(csv_reader)
+
+        if len(rows) == 0:
+            await interaction.response.send_message("No boosters to upload.", ephemeral=True)
+            return
+        
+        for row in rows:
+            user_id = row[0]
+            role_id = row[1]
+
+            role = discord.utils.get(interaction.guild.roles, id=int(role_id))
+            role_name = role.name
+            role_color = role.color
+
+            db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "pinged": True,  "role_id": role_id, "role_name": role_name, "role_color": role_color, "role_icon": None})
+
+        await interaction.followup.send("Boosters uploaded.")
     
 
     @app_commands.command(name="get_booster_role")
