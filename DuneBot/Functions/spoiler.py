@@ -50,6 +50,20 @@ class SpoilerCog(commands.Cog):
         db_client[DB_NAME]["Spoiler Keywords"].delete_one({"keyword": keyword_to_remove})
         
         await interaction.response.send_message(f"Keyword removed.")
+
+    @app_commands.command(name="add_spoiler_free_channel", description="Mark a channel as spoiler free.")
+    async def add_spoiler_free_channel(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.ban_members:
+            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+            return
+        
+        if db_client[DB_NAME]["Spoiler Free Channels"].find_one({"channel_id": interaction.channel.id}): 
+            await interaction.response.send_message(f"Channel already marked as spoiler free.")
+            return
+
+        db_client[DB_NAME]["Spoiler Free Channels"].insert_one({"channel_id": interaction.channel.id, "channel_name": interaction.channel.name})
+        
+        await interaction.response.send_message(f"Channel marked as spoiler free.")
     
     
     async def check_spoiler(self, message: discord.Message) -> None:
@@ -61,26 +75,9 @@ class SpoilerCog(commands.Cog):
         keywords = get_spoiler_keywords()
 
         modlog_channel = self.bot.get_channel(MODLOG_CHANNEL_ID)
-        
-        channel_ids = {
-            "production": [
-                701674250591010840,  #general
-                768612534076833864,  #filmbook
-                751681926527582329,  #cinematv
-                751682462001659986,  #nondunebooks
-                751684353523843165,  #games
-                753460736579207208,  #offtopic
-                715906624887193702,  #baliset
-                701883990369370134,  #sietchposting
-                702080128997654548,  #first time reader
-                701690551996776459,  #moviesofdune
-                701726640719396905,  #gamesofdune
-                1068027156455755806, #heretical
-            ],
-            "development": [1130972092570009632] #test channel
-        }
 
-        current_channel_ids = channel_ids.get(ENVIRONMENT, [])
+        # Get all from the collection "Spoiler Free Channels"
+        current_channel_ids = get_spoiler_channel_ids()
         
         # Check if the message is from the desired channel
         for id in current_channel_ids:
@@ -95,6 +92,12 @@ class SpoilerCog(commands.Cog):
         # Allow other event listeners (commands, etc.) to continue functioning
         await self.bot.process_commands(message)
 
+def get_spoiler_channel_ids() -> List[int]:
+    channels = []
+    cursor = db_client[DB_NAME]["Spoiler Free Channels"].find({})
+    for document in cursor:
+        channels.append(document["channel_id"])
+    return channels
 
 def is_marked_spoiler(text, keyword) -> bool:
     pattern = rf'.*\|\|.*{re.escape(keyword)}.*\|\|.*'
