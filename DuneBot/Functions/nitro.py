@@ -97,6 +97,10 @@ class NitroCog(commands.Cog):
 
                 role_id = role_data["role_id"]
 
+                # Skip if the user has not set up a role
+                if role_id is None:
+                    continue
+
                 role = discord.utils.get(guild.roles, id=int(role_id))
 
                 if role is None:
@@ -104,17 +108,17 @@ class NitroCog(commands.Cog):
                     role_color = discord.Colour(int(role_data["role_color"].replace("#", ""), 16))
                     
                     guild = self.bot.guilds[0]
-                    role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
+                    booster_role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
 
-                    await role.edit(position=50)
+                    await booster_role.edit(position=50)
 
                     member = guild.get_member(int(user_id))
 
                     # Add the role to the user
-                    await member.add_roles(role, reason="Booster role")
+                    await member.add_roles(booster_role, reason="Booster role")
 
                     # Update the role id in the database
-                    db_client["Boosters"].update_one({"user_id": user_id}, {"$set": {"role_id": role.id}})
+                    db_client["Boosters"].update_one({"user_id": user_id}, {"$set": {"role_id": booster_role.id}})
                 else:
                     continue
 
