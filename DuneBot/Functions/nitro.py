@@ -103,7 +103,7 @@ class NitroCog(commands.Cog):
                 general_chat = self.bot.guilds[0].get_channel(701674250591010840)
                 general_chat: discord.TextChannel
 
-                await general_chat.send(f"Thank you for boosting the server {booster.mention}! Use /get_booster_role to set up a custom role.")
+                await general_chat.send(f"Thank you for boosting the server {booster.name}! Use /get_booster_role to set up a custom role.", )
                 add_pinged_booster(booster)
     
 
@@ -128,11 +128,11 @@ def get_booster_ids() -> list[str]:
 
 
 def add_pinged_booster(user: discord.Member) -> None:
-    db_client[DB_NAME]["Pinged Boosters"].insert_one({"user_id": str(user.id)})
+    db_client[DB_NAME]["Pinged Boosters"].insert_one({"user_id": user.id})
 
 
 def has_been_pinged(user: discord.Member) -> bool:
-    if db_client[DB_NAME]["Pinged Boosters"].find_one({"user_id": str(user.id)}):
+    if db_client[DB_NAME]["Pinged Boosters"].find_one({"user_id": user.id}):
         return True
     return False
 
