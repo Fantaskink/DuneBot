@@ -1,13 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-from config import get_base_path, db_client, DB_NAME
-import os
-import csv
+from config import db_client, DB_NAME
 import re
-
-BOOSTER_CSV_PATH = get_base_path() + 'csv/boosters.csv'
-PINGED_BOOSTER_CSV_PATH = get_base_path() + 'csv/pinged_boosters.csv'
 
 class NitroCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -17,39 +12,7 @@ class NitroCog(commands.Cog):
 
     @tasks.loop(minutes=5)
     async def handle_boosters_task(self) -> None:
-        await self.handle_boosters()
-
-    @app_commands.command(name="upload_boosters")
-    @app_commands.guild_only()
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.default_permissions(ban_members=True)
-    async def upload_boosters(self, interaction: discord.Interaction) -> None:        
-        with open(BOOSTER_CSV_PATH, 'r') as stats_file:
-            csv_reader = csv.reader(stats_file)
-            rows = list(csv_reader)
-
-        if len(rows) == 0:
-            await interaction.response.send_message("No boosters to upload.", ephemeral=True)
-            return
-        
-        for row in rows:
-            user_id = row[0]
-            role_id = row[1]
-
-            # If role_id is already present in the database, skip
-            if db_client[DB_NAME]["Boosters"].find_one({"role_id": role_id}):
-                continue
-
-            role = discord.utils.get(interaction.guild.roles, id=int(role_id))
-            role_name = role.name
-            role_color = role.color
-            color_tuple = role_color.to_rgb()
-            color_hex = '#%02x%02x%02x' % color_tuple
-
-            db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "pinged": True,  "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
-
-        await interaction.followup.send("Boosters uploaded.")
-    
+        await self.handle_boosters()    
 
     @app_commands.command(name="get_booster_role")
     @app_commands.describe(role_name="Type in the name of the role you wish to create.", hex_code="Type in the hex code of the color you wish the role to be.")
@@ -77,7 +40,7 @@ class NitroCog(commands.Cog):
         # Convert the hex code to an integer
         role_color = discord.Colour(int(hex_code.replace("#", ""), 16))
 
-        if is_new_booster(str(interaction.user.id)):
+        if is_new_booster(interaction.user.id):
             # Create the role
             guild = self.bot.guilds[0]
             booster_role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
@@ -90,11 +53,12 @@ class NitroCog(commands.Cog):
 
             # Write first time server booster to CSV
             role_id = booster_role.id
-            write_booster_to_csv(str(interaction.user.id), role_id)
+            user_id = str(interaction.user.id)
+            add_booster_to_db(user_id, role_id, role_name, hex_code)
             await interaction.response.send_message("Booster role assigned", ephemeral=True)
         else:
             # Get role id for existing server booster
-            role_id = get_booster_role_id(str(interaction.user.id))
+            role_id = get_booster_role_id(interaction.user.id)
             booster_role = discord.utils.get(interaction.guild.roles, id=int(role_id))
 
             booster_role: discord.Role
@@ -106,10 +70,8 @@ class NitroCog(commands.Cog):
 
     async def handle_boosters(self) -> None:
         guild = self.bot.guilds[0]
-        booster_ids = get_booster_ids() # ids of boosters with custom roles i.e., saved in csv file
+        booster_ids = get_booster_ids() # ids of boosters with custom roles
         boosters = guild.premium_subscribers # List of all the server's boosters
-
-        delete_removed_roles(self)
 
         for user_id in booster_ids:
             user = guild.get_member(int(user_id))
@@ -145,85 +107,34 @@ class NitroCog(commands.Cog):
                 add_pinged_booster(booster)
     
 
-
-    
-    
-def delete_removed_roles(self) -> None:
-    # Open csv file, delete each row where the role id does not exist in the server
-    with open(BOOSTER_CSV_PATH, 'r') as stats_file:
-        csv_reader = csv.reader(stats_file)
-        rows = list(csv_reader)
-
-    with open(BOOSTER_CSV_PATH, 'w') as stats_file:
-        csv_writer = csv.writer(stats_file)
-
-        for row in rows:
-            user_id = row[0]
-            role_id = row[1]
-
-            guild = self.bot.guilds[0]
-            role = discord.utils.get(guild.roles, id=int(role_id))
-
-            if role is not None:
-                csv_writer.writerow([user_id, role_id])
-
 def is_new_booster(user_id) -> bool:
-    if not os.path.exists(BOOSTER_CSV_PATH) or os.path.getsize(BOOSTER_CSV_PATH) == 0:
-        print("File is empty or doesn't exist")
-        return True
+    if db_client[DB_NAME]["Boosters"].find_one({"user_id": user_id}):
+        return False
+    return True
     
-    with open(BOOSTER_CSV_PATH, 'r') as stats_file:
-        csv_reader = csv.reader(stats_file)
 
-        for row in csv_reader:
-            if row[0] == user_id:
-                return False
-
-        return True
-
-
-def write_booster_to_csv(user_id, role_id) -> None:
-    with open(BOOSTER_CSV_PATH, 'a') as booster_file:
-        csv_writer = csv.writer(booster_file)
-
-        # user_id, role_id
-        csv_writer.writerow([user_id, role_id])
-    return
+def add_booster_to_db(user_id, role_id, role_name, color_hex) -> None:
+    db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "pinged": True,  "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
 
 
 def get_booster_role_id(user_id) -> str:
-    with open(BOOSTER_CSV_PATH, 'r') as stats_file:
-        csv_reader = csv.reader(stats_file)
-
-        for row in csv_reader:
-            if row[0] == user_id:
-                return row[1]
-        return None
+    booster = db_client[DB_NAME]["Boosters"].find_one({"user_id": user_id})
+    return booster["role_id"]
 
 def get_booster_ids() -> list[str]:
-    booster_ids = []
-
-    with open(BOOSTER_CSV_PATH, 'r') as stats_file:
-        csv_reader = csv.reader(stats_file)
-
-        for row in csv_reader:
-            booster_ids.append(row[0])
+    boosters = db_client[DB_NAME]["Boosters"].find()
+    booster_ids = [booster["user_id"] for booster in boosters]
     return booster_ids
 
 
 def add_pinged_booster(user: discord.Member) -> None:
-    with open(PINGED_BOOSTER_CSV_PATH, 'a') as csv_file:
-        csv_file.write(str(user.id) + ",\n")
+    db_client[DB_NAME]["Pinged Boosters"].insert_one({"user_id": str(user.id)})
 
 
 def has_been_pinged(user: discord.Member) -> bool:
-    with open(PINGED_BOOSTER_CSV_PATH, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file)
-
-        for row in csv_reader:
-            if row[0] == str(user.id):
-                return True
-        return False
+    if db_client[DB_NAME]["Pinged Boosters"].find_one({"user_id": str(user.id)}):
+        return True
+    return False
 
 
 async def setup(bot: commands.Bot) -> None: 
