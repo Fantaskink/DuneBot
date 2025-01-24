@@ -19,7 +19,7 @@ DB_CONNECTION_STRING = os.environ.get("DB_CONNECTION_STRING")
 
 DB_NAME = os.environ.get("DB_NAME")
 
-db_client = MongoClient(DB_CONNECTION_STRING, server_api=ServerApi('1'))
+db_client = MongoClient(DB_CONNECTION_STRING, server_api=ServerApi('1'))[DB_NAME]
 
 def get_base_path():
     if ENVIRONMENT == "production":

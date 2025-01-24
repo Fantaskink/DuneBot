@@ -1,8 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-from config import db_client, DB_NAME
+from config import db_client
 import re
+from typing import List, Dict
 
 class NitroCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -18,7 +19,6 @@ class NitroCog(commands.Cog):
     @app_commands.describe(role_name="Type in the name of the role you wish to create.", hex_code="Type in the hex code of the color you wish the role to be.")
     @app_commands.guild_only()
     async def get_booster_role(self, interaction: discord.Interaction, role_name: str, hex_code: str) -> None:
-        print(role_name, hex_code)
         # Terminate if the color is not a valid hex code
         if not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', hex_code):
             await interaction.response.send_message("Hex code must be in format #xxxxxx", ephemeral=True)
@@ -76,8 +76,11 @@ class NitroCog(commands.Cog):
         for user_id in booster_ids:
             user = guild.get_member(int(user_id))
         
-            # If user has left the server, do nothing
+            # If user has left the server, delete role
             if user is None:
+                role_id = get_booster_role_id(user_id)
+                role = discord.utils.get(guild.roles, id=int(role_id))
+                await role.delete(reason="User left the server")
                 continue
             
             # In cases where a user's boost has run out
@@ -90,23 +93,31 @@ class NitroCog(commands.Cog):
             
             # If the user has previously boosted and set up a custom role and has started boosting again
             if user in boosters:
-                # Create role again from database
+                # Create role again from database if it does not exist
                 role_data = get_role_data(user_id)
-                role_name = role_data["role_name"]
-                role_color = discord.Colour(int(role_data["role_color"].replace("#", ""), 16))
-                
-                guild = self.bot.guilds[0]
-                role = guild.create_role(name=role_name, color=role_color, reason="Booster role")
 
-                await role.edit(position=50)
+                role_id = role_data["role_id"]
 
-                member = guild.get_member(int(user_id))
+                role = discord.utils.get(guild.roles, id=int(role_id))
 
-                # Add the role to the user
-                await member.add_roles(role, reason="Booster role")
+                if role is None:
+                    role_name = role_data["role_name"]
+                    role_color = discord.Colour(int(role_data["role_color"].replace("#", ""), 16))
+                    
+                    guild = self.bot.guilds[0]
+                    role = await guild.create_role(name=role_name, color=role_color, reason="Booster role")
 
-                # Update the role id in the database
-                db_client[DB_NAME]["Boosters"].update_one({"user_id": user_id}, {"$set": {"role_id": role.id}})
+                    await role.edit(position=50)
+
+                    member = guild.get_member(int(user_id))
+
+                    # Add the role to the user
+                    await member.add_roles(role, reason="Booster role")
+
+                    # Update the role id in the database
+                    db_client["Boosters"].update_one({"user_id": user_id}, {"$set": {"role_id": role.id}})
+                else:
+                    pass
 
 
         # Ping users that do not have a custom role and have not been pinged already
@@ -120,36 +131,36 @@ class NitroCog(commands.Cog):
     
 
 def is_new_booster(user_id) -> bool:
-    if db_client[DB_NAME]["Boosters"].find_one({"user_id": user_id}):
+    if db_client["Boosters"].find_one({"user_id": user_id}):
         return False
     return True
     
 
-def add_booster_to_db(user_id, role_id, role_name, color_hex) -> None:
-    db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
+def add_booster_to_db(user_id: int, role_id: int, role_name: str, color_hex: str) -> None:
+    db_client["Boosters"].insert_one({"user_id": user_id, "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
 
 
 def get_booster_role_id(user_id) -> str:
-    booster = db_client[DB_NAME]["Boosters"].find_one({"user_id": user_id})
+    booster = db_client["Boosters"].find_one({"user_id": user_id})
     return booster["role_id"]
 
-def get_booster_ids() -> list[str]:
-    boosters = db_client[DB_NAME]["Boosters"].find()
+def get_booster_ids() -> List[int]:
+    boosters = db_client["Boosters"].find()
     booster_ids = [booster["user_id"] for booster in boosters]
     return booster_ids
 
 
 def add_pinged_booster(user: discord.Member) -> None:
-    db_client[DB_NAME]["Pinged Boosters"].insert_one({"user_id": user.id})
+    db_client["Pinged Boosters"].insert_one({"user_id": user.id})
 
 
 def has_been_pinged(user: discord.Member) -> bool:
-    if db_client[DB_NAME]["Pinged Boosters"].find_one({"user_id": user.id}):
+    if db_client["Pinged Boosters"].find_one({"user_id": user.id}):
         return True
     return False
 
-def get_role_data(user_id) -> dict:
-    return db_client[DB_NAME]["Boosters"].find_one({"user_id": user_id})
+def get_role_data(user_id: int) -> Dict:
+    return db_client["Boosters"].find_one({"user_id": user_id})
 
 async def setup(bot: commands.Bot) -> None: 
     await bot.add_cog(NitroCog(bot))
