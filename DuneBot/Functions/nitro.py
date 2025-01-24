@@ -17,7 +17,7 @@ class NitroCog(commands.Cog):
         self.handle_boosters_task.start()
     
 
-    @tasks.loop(hours=1)
+    @tasks.loop(minutes=5)
     async def handle_boosters_task(self) -> None:
         await self.handle_boosters()
     

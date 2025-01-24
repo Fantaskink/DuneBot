@@ -1,6 +1,12 @@
 import discord
 from discord.ext import commands
-from config import TOKEN
+from config import TOKEN, db_client
+
+try:
+    db_client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
 
 
 intents = discord.Intents.all()
