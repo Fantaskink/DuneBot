@@ -6,7 +6,6 @@ import os
 import csv
 import re
 
-BOOSTER_CSV_PATH = get_base_path() + 'csv/boosters.csv'
 PINGED_BOOSTER_CSV_PATH = get_base_path() + 'csv/pinged_boosters.csv'
 
 class NitroCog(commands.Cog):
@@ -19,33 +18,25 @@ class NitroCog(commands.Cog):
     async def handle_boosters_task(self) -> None:
         await self.handle_boosters()
 
-    @app_commands.command(name="upload_boosters")
+    @app_commands.command(name="upload_pinged_boosters")
     @app_commands.guild_only()
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.default_permissions(ban_members=True)
-    async def upload_boosters(self, interaction: discord.Interaction) -> None:        
-        with open(BOOSTER_CSV_PATH, 'r') as stats_file:
-            csv_reader = csv.reader(stats_file)
-            rows = list(csv_reader)
-
-        if len(rows) == 0:
-            await interaction.response.send_message("No boosters to upload.", ephemeral=True)
+    async def upload_pinged_boosters(self, interaction: discord.Interaction) -> None:
+        if not interaction.user.guild_permissions.ban_members:
+            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
             return
         
-        for row in rows:
-            user_id = row[0]
-            role_id = row[1]
+        with open(PINGED_BOOSTER_CSV_PATH, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file)
 
-            role = discord.utils.get(interaction.guild.roles, id=int(role_id))
-            role_name = role.name
-            role_color = role.color
-            color_tuple = role_color.to_rgb()
-            color_hex = '#%02x%02x%02x' % color_tuple
+            for row in csv_reader:
+                user_id = int(row[0])
+                user = self.bot.guilds[0].get_member(user_id)
 
-            db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "pinged": True,  "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
-
-        await interaction.followup.send("Boosters uploaded.")
-    
+                if user is not None:
+                    db_client[DB_NAME]["Pinged Boosters"].insert_one({"user_id": user_id})
+        
+        await interaction.response.send_message("Pinged boosters uploaded", ephemeral=True)
+                
 
     @app_commands.command(name="get_booster_role")
     @app_commands.describe(role_name="Type in the name of the role you wish to create.", hex_code="Type in the hex code of the color you wish the role to be.")
