@@ -4,9 +4,8 @@ from discord.ext import commands
 import csv
 import re
 from typing import List
-from config import get_base_path, MODLOG_CHANNEL_ID, ENVIRONMENT, db_client, DB_NAME
+from config import MODLOG_CHANNEL_ID, ENVIRONMENT, db_client, DB_NAME
 
-SPOILER_KEYWORD_PATH = get_base_path() + 'csv/keywords.csv'
 
 async def keyword_autocomplete( 
         interaction: discord.Interaction, 
@@ -37,8 +36,7 @@ class SpoilerCog(commands.Cog):
             await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
             return
 
-        with open(SPOILER_KEYWORD_PATH, 'a') as csv_file:
-                csv_file.write(keyword + ",\n")
+        db_client[DB_NAME]["spoiler_keywords"].insert_one({"keyword": keyword})
         
         await interaction.response.send_message(f"Keyword: {keyword} added.")
     
@@ -46,15 +44,10 @@ class SpoilerCog(commands.Cog):
     @app_commands.autocomplete(index=keyword_autocomplete)
     @app_commands.guild_only()
     async def remove_spoiler_keyword(self, interaction: discord.Interaction, index: str):
-        with open(SPOILER_KEYWORD_PATH, 'r') as csv_file:
-            reader = csv.reader(csv_file)
-            data = list(reader)
+        keywords = get_spoiler_keywords()
+        keyword_to_remove = keywords[int(index)]
 
-            data.pop(int(index))
-
-            with open(SPOILER_KEYWORD_PATH, 'w', newline='') as csv_file:
-                writer = csv.writer(csv_file)
-                writer.writerows(data)
+        db_client[DB_NAME]["Spoiler Keywords"].delete_one({"keyword": keyword_to_remove})
         
         await interaction.response.send_message(f"Keyword removed.")
     
@@ -110,21 +103,17 @@ def is_marked_spoiler(text, keyword) -> bool:
 
 def get_spoiler_keywords() -> List[str]:
     keywords = []
-    with open(SPOILER_KEYWORD_PATH, 'r', newline='') as csvfile:
-        csv_reader = csv.reader(csvfile, skipinitialspace=False)
-
-        for row in csv_reader:
-            if row:
-                keywords.append(row[0])
+    cursor = db_client[DB_NAME]["Spoiler Keywords"].find({})
+    for document in cursor:
+        keywords.append(document["keyword"])
     return keywords
 
 
 def get_keyword_choices():
-        choices = []
-        for keyword in get_spoiler_keywords():
-            choices.append(app_commands.Choice(name=keyword, value=keyword))
-
-            return (choices)
+    choices = []
+    for keyword in get_spoiler_keywords():
+        choices.append(app_commands.Choice(name=keyword, value=keyword))
+    return choices
 
 async def setup(bot: commands.Bot) -> None: 
     await bot.add_cog(SpoilerCog(bot))
