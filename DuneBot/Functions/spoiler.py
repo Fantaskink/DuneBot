@@ -64,6 +64,20 @@ class SpoilerCog(commands.Cog):
         db_client[DB_NAME]["Spoiler Free Channels"].insert_one({"channel_id": interaction.channel.id, "channel_name": interaction.channel.name})
         
         await interaction.response.send_message(f"Channel marked as spoiler free.")
+
+    @app_commands.command(name="remove_spoiler_free_channel", description="Unmark a channel as spoiler free.")
+    async def remove_spoiler_free_channel(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.ban_members:
+            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+            return
+        
+        if not db_client[DB_NAME]["Spoiler Free Channels"].find_one({"channel_id": interaction.channel.id}):
+            await interaction.response.send_message(f"Channel not marked as spoiler free.")
+            return
+
+        db_client[DB_NAME]["Spoiler Free Channels"].delete_one({"channel_id": interaction.channel.id})
+        
+        await interaction.response.send_message(f"Channel unmarked as spoiler free.")
     
     
     async def check_spoiler(self, message: discord.Message) -> None:
