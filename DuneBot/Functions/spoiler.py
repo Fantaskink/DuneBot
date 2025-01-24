@@ -36,7 +36,7 @@ class SpoilerCog(commands.Cog):
             await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
             return
 
-        db_client[DB_NAME]["spoiler_keywords"].insert_one({"keyword": keyword})
+        db_client[DB_NAME]["Spoiler Keywords"].insert_one({"keyword": keyword})
         
         await interaction.response.send_message(f"Keyword: {keyword} added.")
     
