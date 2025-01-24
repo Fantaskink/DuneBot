@@ -39,8 +39,10 @@ class NitroCog(commands.Cog):
             role = discord.utils.get(interaction.guild.roles, id=int(role_id))
             role_name = role.name
             role_color = role.color
+            color_tuple = role_color.to_rgb()
+            color_hex = '#%02x%02x%02x' % color_tuple
 
-            db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "pinged": True,  "role_id": role_id, "role_name": role_name, "role_color": role_color, "role_icon": None})
+            db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "pinged": True,  "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
 
         await interaction.followup.send("Boosters uploaded.")
     
