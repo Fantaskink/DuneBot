@@ -86,15 +86,27 @@ class NitroCog(commands.Cog):
                 role = discord.utils.get(guild.roles, id=int(role_id))
 
                 if role is not None and role in user.roles:
-                    await user.remove_roles(role, reason="Booster role")
+                    await role.delete(reason="Boost expired")
             
             # If the user has previously boosted and set up a custom role and has started boosting again
             if user in boosters:
-                role_id = get_booster_role_id(user_id)
-                role = discord.utils.get(guild.roles, id=int(role_id))
+                # Create role again from database
+                role_data = get_role_data(user_id)
+                role_name = role_data["role_name"]
+                role_color = discord.Colour(int(role_data["role_color"].replace("#", ""), 16))
+                
+                guild = self.bot.guilds[0]
+                role = guild.create_role(name=role_name, color=role_color, reason="Booster role")
 
-                if role not in user.roles:
-                    await user.add_roles(role, reason="Booster role")
+                await role.edit(position=50)
+
+                member = guild.get_member(int(user_id))
+
+                # Add the role to the user
+                await member.add_roles(role, reason="Booster role")
+
+                # Update the role id in the database
+                db_client[DB_NAME]["Boosters"].update_one({"user_id": user_id}, {"$set": {"role_id": role.id}})
 
 
         # Ping users that do not have a custom role and have not been pinged already
@@ -103,7 +115,7 @@ class NitroCog(commands.Cog):
                 general_chat = self.bot.guilds[0].get_channel(701674250591010840)
                 general_chat: discord.TextChannel
 
-                await general_chat.send(f"Thank you for boosting the server {booster.name}! Use /get_booster_role to set up a custom role.", )
+                await general_chat.send(f"Thank you for boosting the server {booster.name}! Use ``/get_booster_role`` to set up a custom role.", )
                 add_pinged_booster(booster)
     
 
@@ -136,6 +148,8 @@ def has_been_pinged(user: discord.Member) -> bool:
         return True
     return False
 
+def get_role_data(user_id) -> dict:
+    return db_client[DB_NAME]["Boosters"].find_one({"user_id": user_id})
 
 async def setup(bot: commands.Bot) -> None: 
     await bot.add_cog(NitroCog(bot))
