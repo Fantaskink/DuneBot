@@ -51,9 +51,9 @@ class NitroCog(commands.Cog):
             # Add the role to the user
             await member.add_roles(booster_role, reason="Booster role")
 
-            # Write first time server booster to CSV
+            # Write first time server booster to database
             role_id = booster_role.id
-            user_id = str(interaction.user.id)
+            user_id = interaction.user.id
             add_booster_to_db(user_id, role_id, role_name, hex_code)
             await interaction.response.send_message("Booster role assigned", ephemeral=True)
         else:
@@ -114,7 +114,7 @@ def is_new_booster(user_id) -> bool:
     
 
 def add_booster_to_db(user_id, role_id, role_name, color_hex) -> None:
-    db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "pinged": True,  "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
+    db_client[DB_NAME]["Boosters"].insert_one({"user_id": user_id, "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
 
 
 def get_booster_role_id(user_id) -> str:
