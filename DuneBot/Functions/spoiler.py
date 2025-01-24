@@ -4,7 +4,7 @@ from discord.ext import commands
 import csv
 import re
 from typing import List
-from config import get_base_path, MODLOG_CHANNEL_ID, ENVIRONMENT
+from config import get_base_path, MODLOG_CHANNEL_ID, ENVIRONMENT, db_client, DB_NAME
 
 SPOILER_KEYWORD_PATH = get_base_path() + 'csv/keywords.csv'
 
@@ -28,6 +28,21 @@ class SpoilerCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         await self.check_spoiler(message)
+
+    @app_commands.command(name="upload_spoiler_keywords")
+    async def upload_spoiler_keywords(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.ban_members:
+            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+            return
+
+        with open(SPOILER_KEYWORD_PATH, 'r') as csv_file:
+            reader = csv.reader(csv_file)
+            data = list(reader)
+
+            for row in data:
+                db_client[DB_NAME]["Spoiler Keywords"].insert_one({"keyword": row[0]})
+        
+        await interaction.response.send_message(f"Keywords uploaded to MongoDB.")
 
     @app_commands.command(name="add_spoiler_keyword")
     @app_commands.describe(keyword="Type in a keyword you wish to be considered a spoiler.")
