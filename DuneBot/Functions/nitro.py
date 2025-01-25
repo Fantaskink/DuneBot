@@ -86,7 +86,7 @@ class NitroCog(commands.Cog):
                 role_id = get_booster_role_id(user_id)
                 role = discord.utils.get(guild.roles, id=int(role_id))
 
-                if role is not None and role in user.roles:
+                if role is not None:
                     await role.delete(reason="Boost expired")
                 continue
             
