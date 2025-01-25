@@ -119,8 +119,6 @@ class NitroCog(commands.Cog):
 
                     # Update the role id in the database
                     db_client["Boosters"].update_one({"user_id": user_id}, {"$set": {"role_id": booster_role.id}})
-                else:
-                    continue
 
 
         # Ping users that do not have a custom role and have not been pinged already
@@ -128,7 +126,7 @@ class NitroCog(commands.Cog):
             if not has_been_pinged(booster):
                 general_chat = self.bot.guilds[0].get_channel(701674250591010840) # wtf why is this hardcoded, switch to default channel
 
-                await general_chat.send(f"Thank you for boosting the server {booster.name}! Use ``/get_booster_role`` to set up a custom role.", )
+                await general_chat.send(f"Thank you for boosting the server {booster.mention}! Use ``/get_booster_role`` if you would like to set up a custom role.", )
                 add_pinged_booster(booster)
     
 
