@@ -120,6 +120,16 @@ class AdminCog(commands.Cog):
             await reply_message.reply(message)
         else:
             await interaction.channel.send(message)
+        
+        modlog_channel = self.bot.get_channel(MODLOG_CHANNEL_ID)
+
+        description = f"Message sent in {interaction.channel.mention} by {interaction.user.mention}"
+
+        embed = discord.Embed(color=discord.Colour.gold(), description=description)
+
+        embed.add_field(name="Message", value=message, inline=False)
+
+        await modlog_channel.send(embed=embed)
     
 
     @app_commands.command(name="sync", description="Sync commands")
