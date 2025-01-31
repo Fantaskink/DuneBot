@@ -10,7 +10,7 @@ async def keyword_autocomplete(
         interaction: discord.Interaction, 
         current: str
     ) -> List[app_commands.Choice[int]]:
-        keywords = self.cached_keywords()
+        keywords = get_spoiler_keywords()
         choices = []
         for keyword in keywords:
             if len(choices) == 25:
@@ -131,12 +131,6 @@ def get_spoiler_keywords() -> List[str]:
         keywords.append(document["keyword"])
     return keywords
 
-
-def get_keyword_choices():
-    choices = []
-    for keyword in self.cached_keywords():
-        choices.append(app_commands.Choice(name=keyword, value=keyword))
-    return choices
 
 async def setup(bot: commands.Bot) -> None: 
     await bot.add_cog(SpoilerCog(bot))
