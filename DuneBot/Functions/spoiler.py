@@ -90,9 +90,7 @@ class SpoilerCog(commands.Cog):
             return
         
         # List of keywords to look for
-        keywords = self.cached_keywords()
-
-        print(keywords)
+        keywords = self.cached_keywords
 
         modlog_channel = self.bot.get_channel(MODLOG_CHANNEL_ID)
 
