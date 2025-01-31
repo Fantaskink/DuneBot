@@ -132,6 +132,8 @@ class EncyclopediaCog(commands.Cog):
         try:
             wiki_page = fandom.page(search_term)
         except Exception as e:
+            if interaction.response.is_done():
+                return
             await interaction.followup.send("No results found")
             return
         
@@ -145,6 +147,8 @@ class EncyclopediaCog(commands.Cog):
 
         embed.set_thumbnail(url=image)
 
+        if interaction.response.is_done():
+            return
         await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="search_in_dune")
