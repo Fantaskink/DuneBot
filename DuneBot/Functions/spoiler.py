@@ -10,7 +10,7 @@ async def keyword_autocomplete(
         interaction: discord.Interaction, 
         current: str
     ) -> List[app_commands.Choice[int]]:
-        keywords = get_spoiler_keywords()
+        keywords = self.cached_keywords()
         choices = []
         for keyword in keywords:
             if len(choices) == 25:
@@ -22,6 +22,7 @@ async def keyword_autocomplete(
 class SpoilerCog(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.cached_keywords = get_spoiler_keywords()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -36,6 +37,8 @@ class SpoilerCog(commands.Cog):
             return
 
         db_client[DB_NAME]["Spoiler Keywords"].insert_one({"keyword": keyword})
+
+        self.cached_keywords.append(keyword)
         
         await interaction.response.send_message(f"Keyword: {keyword} added.")
     
@@ -43,10 +46,12 @@ class SpoilerCog(commands.Cog):
     @app_commands.autocomplete(index=keyword_autocomplete)
     @app_commands.guild_only()
     async def remove_spoiler_keyword(self, interaction: discord.Interaction, index: str):
-        keywords = get_spoiler_keywords()
+        keywords = self.cached_keywords
         keyword_to_remove = keywords[int(index)]
 
         db_client[DB_NAME]["Spoiler Keywords"].delete_one({"keyword": keyword_to_remove})
+
+        self.cached_keywords.remove(keyword_to_remove)
         
         await interaction.response.send_message(f"Keyword removed.")
 
@@ -85,7 +90,9 @@ class SpoilerCog(commands.Cog):
             return
         
         # List of keywords to look for
-        keywords = get_spoiler_keywords()
+        keywords = self.cached_keywords()
+
+        print(keywords)
 
         modlog_channel = self.bot.get_channel(MODLOG_CHANNEL_ID)
 
@@ -127,7 +134,7 @@ def get_spoiler_keywords() -> List[str]:
 
 def get_keyword_choices():
     choices = []
-    for keyword in get_spoiler_keywords():
+    for keyword in self.cached_keywords():
         choices.append(app_commands.Choice(name=keyword, value=keyword))
     return choices
 
