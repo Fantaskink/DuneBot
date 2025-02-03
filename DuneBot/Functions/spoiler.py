@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import re
 from typing import List
-from config import MODLOG_CHANNEL_ID, db_client, DB_NAME
+from config import MODLOG_CHANNEL_ID, db_client
 
 
 async def keyword_autocomplete( 
@@ -36,7 +36,7 @@ class SpoilerCog(commands.Cog):
             await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
             return
 
-        db_client[DB_NAME]["Spoiler Keywords"].insert_one({"keyword": keyword})
+        db_client["Spoiler Keywords"].insert_one({"keyword": keyword})
 
         self.cached_keywords.append(keyword)
         
@@ -49,7 +49,7 @@ class SpoilerCog(commands.Cog):
         keywords = self.cached_keywords
         keyword_to_remove = keywords[int(index)]
 
-        db_client[DB_NAME]["Spoiler Keywords"].delete_one({"keyword": keyword_to_remove})
+        db_client["Spoiler Keywords"].delete_one({"keyword": keyword_to_remove})
 
         self.cached_keywords.remove(keyword_to_remove)
         
@@ -61,11 +61,11 @@ class SpoilerCog(commands.Cog):
             await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
             return
         
-        if db_client[DB_NAME]["Spoiler Free Channels"].find_one({"channel_id": interaction.channel.id}): 
+        if db_client["Spoiler Free Channels"].find_one({"channel_id": interaction.channel.id}): 
             await interaction.response.send_message(f"Channel already marked as spoiler free.")
             return
 
-        db_client[DB_NAME]["Spoiler Free Channels"].insert_one({"channel_id": interaction.channel.id, "channel_name": interaction.channel.name})
+        db_client["Spoiler Free Channels"].insert_one({"channel_id": interaction.channel.id, "channel_name": interaction.channel.name})
         
         await interaction.response.send_message(f"Channel marked as spoiler free.")
 
@@ -75,11 +75,11 @@ class SpoilerCog(commands.Cog):
             await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
             return
         
-        if not db_client[DB_NAME]["Spoiler Free Channels"].find_one({"channel_id": interaction.channel.id}):
+        if not db_client["Spoiler Free Channels"].find_one({"channel_id": interaction.channel.id}):
             await interaction.response.send_message(f"Channel not marked as spoiler free.")
             return
 
-        db_client[DB_NAME]["Spoiler Free Channels"].delete_one({"channel_id": interaction.channel.id})
+        db_client["Spoiler Free Channels"].delete_one({"channel_id": interaction.channel.id})
         
         await interaction.response.send_message(f"Channel unmarked as spoiler free.")
     
@@ -112,7 +112,7 @@ class SpoilerCog(commands.Cog):
 
 def get_spoiler_channel_ids() -> List[int]:
     channels = []
-    cursor = db_client[DB_NAME]["Spoiler Free Channels"].find({})
+    cursor = db_client["Spoiler Free Channels"].find({})
     for document in cursor:
         channels.append(document["channel_id"])
     return channels
@@ -124,9 +124,15 @@ def is_marked_spoiler(text, keyword) -> bool:
 
 def get_spoiler_keywords() -> List[str]:
     keywords = []
-    cursor = db_client[DB_NAME]["Spoiler Keywords"].find({})
-    for document in cursor:
-        keywords.append(document["keyword"])
+    try:
+        cursor = db_client["Spoiler Keywords"].find({})
+        print(f"Cursor created: {cursor}")  # Debugging statement
+        for document in cursor:
+            keywords.append(document["keyword"])
+            print(f"Fetched keyword: {document['keyword']}")  # Debugging statement
+    except Exception as e:
+        print(f"Error fetching keywords: {e}")  # Debugging statement
+    print(f"Final keywords list: {keywords}")  # Debugging statement
     return keywords
 
 
