@@ -14,6 +14,15 @@ class AdminCog(commands.Cog):
     def cog_unload(self) -> None:
         self.deleted_messages.clear()
         self.edited_messages.clear()
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
+        
+        # Jules filter
+        if message.channel.id == 753460736579207208 and message.author.id == 443489357723074570:
+            await message.delete()
     
     
     @commands.Cog.listener()
