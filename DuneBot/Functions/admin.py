@@ -16,6 +16,15 @@ class AdminCog(commands.Cog):
         self.edited_messages.clear()
 
     @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        if payload.user_id == self.bot.user.id:
+            return
+
+        # Another Jules filter
+        if payload.user.id == 443489357723074570 and payload.channel_id == 753460736579207208:
+            await self.bot.http.remove_reaction(payload.channel_id, payload.message_id, payload.emoji, payload.user_id)
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
@@ -133,9 +142,7 @@ class AdminCog(commands.Cog):
         modlog_channel = self.bot.get_channel(MODLOG_CHANNEL_ID)
 
         description = f"Message sent in {interaction.channel.mention} by {interaction.user.mention}"
-
         embed = discord.Embed(color=discord.Colour.gold(), description=description)
-
         embed.add_field(name="Message", value=message, inline=False)
 
         await modlog_channel.send(embed=embed)
