@@ -113,14 +113,9 @@ class HOFCog(commands.Cog):
         if interaction.channel.id in tracked_channel_ids:
             db_client["Tracked HOF Channels"].delete_one({"channel_id": interaction.channel.id})
             await interaction.response.send_message(f"Channel removed from tracked channels.")
-
-        tracked_channels = [self.bot.get_channel(id) for id in tracked_channel_ids]
-
-        tracked_channels_string = ""
-        for channel in tracked_channels:
-            tracked_channels_string += f"{channel.mention}\n"
-
-        await interaction.response.send_message(f"Tracked channels:\n{tracked_channels_string}")
+        else:
+            db_client["Tracked HOF Channels"].insert_one({"channel_id": interaction.channel.id})
+            await interaction.response.send_message(f"Channel added to tracked channels.")
 
     def get_hof_channel(self) -> discord.TextChannel:
         try:
