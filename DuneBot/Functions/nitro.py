@@ -26,12 +26,15 @@ class NitroCog(commands.Cog):
         guild = self.bot.guilds[0]
         boosters = guild.premium_subscribers
 
-        for booster in boosters:
-            role_id = get_booster_role_id(booster.id)
-            role = discord.utils.get(guild.roles, id=int(role_id))
+        if interaction.user not in boosters:
+            await interaction.response.send_message("You must be a server booster to run this command.", ephemeral=True)
+            return
 
-            if role is not None:
-                await role.edit(position=position)
+        # Update position of booster role of user who runs command
+        role_id = get_booster_role_id(interaction.user.id)
+        role = discord.utils.get(guild.roles, id=int(role_id))
+        if role is not None:
+            await role.edit(position=position)
         
         await interaction.response.send_message("Role positions updated", ephemeral=True)
 
