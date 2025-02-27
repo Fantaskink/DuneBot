@@ -13,7 +13,27 @@ class NitroCog(commands.Cog):
 
     @tasks.loop(minutes=5)
     async def handle_boosters_task(self) -> None:
-        await self.handle_boosters()    
+        await self.handle_boosters()
+
+    @app_commands.command(name="update_role_position")
+    @app_commands.describe(position="The position to set the role to.")
+    @app_commands.guild_only()
+    async def update_role_position(self, interaction: discord.Interaction, position: int) -> None:
+        if not interaction.user.guild_permissions.ban_members:
+            await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
+            return
+        
+        guild = self.bot.guilds[0]
+        boosters = guild.premium_subscribers
+
+        for booster in boosters:
+            role_id = get_booster_role_id(booster.id)
+            role = discord.utils.get(guild.roles, id=int(role_id))
+
+            if role is not None:
+                await role.edit(position=position)
+        
+        await interaction.response.send_message("Role positions updated", ephemeral=True)
 
     @app_commands.command(name="get_booster_role")
     @app_commands.describe(role_name="Type in the name of the role you wish to create.", hex_code="Type in the hex code of the color you wish the role to be.")
