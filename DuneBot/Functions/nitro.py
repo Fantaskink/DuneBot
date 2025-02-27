@@ -23,8 +23,7 @@ class NitroCog(commands.Cog):
             await interaction.response.send_message("You are not authorized to run this command.", ephemeral=True)
             return
         
-        guild = self.bot.guilds[0]
-        boosters = guild.premium_subscribers
+        boosters = interaction.guild.premium_subscribers
 
         if interaction.user not in boosters:
             await interaction.response.send_message("You must be a server booster to run this command.", ephemeral=True)
@@ -32,7 +31,7 @@ class NitroCog(commands.Cog):
 
         # Update position of booster role of user who runs command
         role_id = get_booster_role_id(interaction.user.id)
-        role = discord.utils.get(guild.roles, id=int(role_id))
+        role = discord.utils.get(interaction.guild.roles, id=int(role_id))
         if role is not None:
             await role.edit(position=position)
         
@@ -163,9 +162,9 @@ def add_booster_to_db(user_id: int, role_id: int, role_name: str, color_hex: str
     db_client["Boosters"].insert_one({"user_id": user_id, "role_id": role_id, "role_name": role_name, "role_color": color_hex, "role_icon": None})
 
 
-def get_booster_role_id(user_id) -> str:
+def get_booster_role_id(user_id) -> int:
     booster = db_client["Boosters"].find_one({"user_id": user_id})
-    return booster["role_id"]
+    return int(booster["role_id"])
 
 
 def get_booster_ids() -> List[int]:
