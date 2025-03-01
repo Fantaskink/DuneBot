@@ -128,5 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-/DuneBot/book
+/book
 DuneBot/db/wordle.db
