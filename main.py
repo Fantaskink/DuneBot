@@ -12,7 +12,7 @@ except Exception as e:
 intents = discord.Intents.all()
 intents.message_content = True
 
-cogs: list = ["Functions.wordle", "Functions.admin", "Functions.spoiler", 
+cogs: list = ["Functions.admin", "Functions.spoiler", 
               "Functions.media", "Functions.hall_of_fame", "Functions.misc", 
               "Functions.encyclopedia", "Functions.nitro"]
 
