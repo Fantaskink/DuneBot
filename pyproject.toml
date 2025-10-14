@@ -5,8 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "discord-py>=2.5.0",
+    "beautifulsoup4>=4.14.2",
+    "colorthief>=0.2.1",
+    "discord-py>=2.6.4",
     "dotenv>=0.9.9",
-    "pymongo>=4.11.1",
-    "ruff>=0.9.9",
+    "ebooklib>=0.19",
+    "fandom-py>=0.2.1",
+    "pip-system-certs>=5.2",
+    "pymongo>=4.15.3",
 ]
