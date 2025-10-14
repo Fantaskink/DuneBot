@@ -100,7 +100,8 @@ class NitroCog(commands.Cog):
             if user is None:
                 role_id = get_booster_role_id(user_id)
                 role = discord.utils.get(guild.roles, id=int(role_id))
-                await role.delete(reason="User left the server")
+                if role is not None:
+                    await role.delete(reason="User left the server")
                 continue
             
             # In cases where a user's boost has run out
